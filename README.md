@@ -1,7 +1,7 @@
 # Yet Another Drone
-
-This repository is a collection of drones ideas, design and realization of
-@cosmo97 and @gennscar.
+This repository is a collection of drones ideas, design and realization of 
+[@cosmo97](https://github.com/cosmo97) and 
+[@gennscar](https://github.com/gennscar).
 
 ## Official software
 This project is entirely developed following a _free and open source_

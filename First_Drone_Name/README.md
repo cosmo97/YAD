@@ -22,7 +22,3 @@ subsystems:
 - A [supporting frame](./Frame/README.md) to sustain produced stress.
 - [Motors and propellers](./Propulsion/README.md).
 - A [battery](./Battery/README.md).
-
-## Implementation
-
-## Test
