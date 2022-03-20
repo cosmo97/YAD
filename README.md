@@ -1,7 +1,7 @@
-#YAD
-Yet Another Drone
-
-This repository is a collection of drones ideas, design and realization.
+# Yet Another Drone
+This repository is a collection of drones ideas, design and realization of 
+[@cosmo97](https://github.com/cosmo97) and 
+[@gennscar](https://github.com/gennscar).
 
 ## Official software
 This project is entirely developed following a _free and open source_
@@ -12,3 +12,8 @@ system.
 (CAD) modeler.
 3. [YAD GitHub](https://github.com/cosmo97/YAD). Software development and
 version control repository.
+
+## Projects
+Now we are working on our [first drone](./First_Drone_Name/README.md) with MTOM
+< 250 g and speed < 19 m/s. This will allow us to classify it as Open Category
+A1 (no license required).
