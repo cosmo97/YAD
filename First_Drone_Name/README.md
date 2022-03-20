@@ -18,7 +18,7 @@ The drone to flight will require the following components:
 ## Design
 To simplify the design and reduce weight the required components are merged in 4
 subsystems:
-- The [PCB](./Board/README.md) that will accomodate all eletronics.
-- A [supporting frame](./Frame/README.md) to sustain produced stress.
-- [Motors and propellers](./Propulsion/README.md).
-- A [battery](./Battery/README.md).
+- The [PCB](./Board/README.md) that will accomodate all eletronics. The GPS, the Flight controller, the ESCs, the Comms and the Power module are accounted for in this folder.
+- A [supporting frame](./Frame/README.md) to sustain produced stress. The Frame is accounted for in this folder.
+- [Motors and propellers](./Propulsion/README.md). Motor and Propellers are accounted for in this folder.
+- A [battery](./Battery/README.md). The Battery is accounted for in this folder.
