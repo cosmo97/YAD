@@ -14,6 +14,5 @@ system.
 version control repository.
 
 ## Projects
-Now we are working on our [first drone](./First_Drone_Name/README.md) with MTOM
-< 250 g and speed < 19 m/s. This will allow us to classify it as Open Category
-A1 (no license required).
+Working on [Aldo](./Aldo/README.md) with MTOM < 250 g and speed < 19 m/s. This
+will allow us to classify it as Open Category A1 (no license required).
