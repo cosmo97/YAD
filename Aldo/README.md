@@ -1,5 +1,5 @@
 # Aldo
-Aldo is our first drone.
+**A**utonomous **L**ight **D**rone **O**pen-source
 
 ## Requirements
 The drone will weight less than 250 grams and have a maximum speed of 19 m/s.
