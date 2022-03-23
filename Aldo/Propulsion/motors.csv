@@ -1,7 +1,7 @@
-name,stator width [mm],stator height [mm],Kv [rpm/V],battery,pieces,cost [€],cost per piece,shop,url 
-DroneAcc DX2205 2300KV,22,5,2300,,4,€ 46.00,€ 11.50,Amazon,
-BETAFPV 1102 18000KV,11,2,18000,,4,€ 43.99,€ 11.00,Amazon,
-BETAFPV 0802se 19500KV,8,2,19500,,4,€ 43.00,€ 10.75,Amazon,
-Racerstar BR2205 2300KV,22,5,2300,,4,€ 33.00,€ 8.25,Bangood,
-iFlight XING-E Pro 2207 1800KV,22,7,1800,,1,€ 16.28,€ 16.28,Bangood,
-Racerstar BR2207S 1600KV,22,7,1600,,4,€ 36.00,€ 9.00,Bangood,
+name,Max pull [g] (ref voltage [V]),weight [g],Kv [rpm/V],no. of cells,stator width [mm],stator height [mm],cost per piece [€],shop,url 
+CrazePony DX2205 2300KV,774(14.8),28.8,2300,"3S,4S",22,5,11.00,Amazon,
+BETAFPV 1102 18000KV,,2.95,18000,"1S,2S",11,2,11.00,Amazon,
+BETAFPV 0802se 19500KV,22(4.2),1.8,19500,1S,8,2,11.00,Amazon,
+Racerstar BR2205 2300KV,660(11.1),28,2300,"2S,3S,4S",22,5,8.00,Bangood,
+iFlight XING-E Pro 2207 1800KV,1900(24),33.8,1800,"2S,3S,4S,5S,6S",22,7,16.00,Bangood,
+Racerstar BR2207S 1600KV,950(18.5),35,1600,"3S,4S,5S,6S",22,7,9.00,Bangood,
