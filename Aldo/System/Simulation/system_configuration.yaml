@@ -1,0 +1,15 @@
+propulsion:
+  motor:
+    kv: 2300
+    resistance: 0.07
+    weight: 28
+
+  propeller:
+    diameter: 5.1
+    pitch: 4.0
+    num_blades: 3
+    weight: 4
+
+battery:
+  voltage: 11.1
+  weight: 33
