@@ -1,8 +1,8 @@
 import simulation_utils
 from simulation_functions import simulator
 
-QUADCOPTER_CONF_YAML_PATH = "Aldo/System/Simulation/system_configuration.yaml"
-SIM_CONF_YAML_PATH = "Aldo/System/Simulation/simulation_parameters.yaml"
+QUADCOPTER_CONF_YAML_PATH = "Aldo/System/Simulation/quadcopter_configuration.yaml"
+SIM_CONF_YAML_PATH = "Aldo/System/Simulation/simulation_configuration.yaml"
 
 
 def main():
