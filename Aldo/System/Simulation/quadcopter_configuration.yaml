@@ -3,12 +3,14 @@ propulsion:
     kv: 2300
     resistance: 0.07
     weight: 28
+    efficiency: 0.8
 
   propeller:
     diameter: 5.1
     pitch: 4.0
     num_blades: 3
     weight: 4
+    efficiency: 0.85
 
 battery:
   voltage: 11.1

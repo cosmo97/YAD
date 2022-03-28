@@ -1,3 +1,4 @@
+import sys
 import simulation_utils
 from simulation_functions import simulator
 
@@ -11,6 +12,7 @@ def main():
     sim_conf_ = simulation_utils.get_conf_from_yaml(
         SIM_CONF_YAML_PATH)
     system_simulator_ = simulator(quadcopter_conf_, sim_conf_)
+    system_simulator_.static_thrust_theoretical_estimate()
 
 
 if __name__ == "__main__":
