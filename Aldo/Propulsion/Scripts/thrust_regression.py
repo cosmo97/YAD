@@ -7,7 +7,7 @@ from sklearn.linear_model import RidgeCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
-thrust_dataset_csv_ = "Aldo/System/Simulation/data/thrust_dataset.csv"
+thrust_dataset_csv_ = "Aldo/Propulsion/Datasets/thrust_dataset.csv"
 
 
 def extract_data_from_csv():
