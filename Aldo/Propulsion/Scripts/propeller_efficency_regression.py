@@ -9,6 +9,8 @@ propellers_folder = "Aldo/Propulsion/Datasets/Propellers"
 
 def main():
     propellers_dataset = read_csv(propellers_folder + "/Propellers.csv")
+    print(propellers_dataset)
+    input()
 
     for propeller in np.array(propellers_dataset):
 
