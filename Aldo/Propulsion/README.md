@@ -53,8 +53,8 @@ $$
 P_e \eta_{prop} = \frac{{(\tau_{mot} \eta_{T \tau)}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
 V_a I_a \eta_{prop} = \frac{{(K_{\tau} I_a \eta_{T \tau)}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
 (V_b - R_a I_a) I_a \eta_{prop} = \frac{{(\frac{1}{K_V} I_a \eta_{T \tau)}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
-V_b I_a - R_a I_a^2 \eta_{prop} = \frac{{(\frac{1}{K_V})^{\frac{3}{2}} I_a ^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}}}} {\sqrt{2 \rho A}} \\
-V_b I_a{\sqrt{2 \rho A}} - R_a I_a^2 \eta_{prop}{\sqrt{2 \rho A}} - {\left(\frac{1}{K_V}\right)^{\frac{3}{2}} I_a ^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}}} = 0
+V_b I_a\eta_{prop} - R_a I_a^2 \eta_{prop} = \frac{{(\frac{1}{K_V})^{\frac{3}{2}} I_a ^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}}}} {\sqrt{2 \rho A}} \\
+V_b I_a\eta_{prop}{\sqrt{2 \rho A}} - R_a I_a^2 \eta_{prop}{\sqrt{2 \rho A}} - {\left(\frac{1}{K_V}\right)^{\frac{3}{2}} I_a ^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}}} = 0
 $$
 Gathering the terms and ordering the equation we obtain:
 $$
