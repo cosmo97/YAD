@@ -11,63 +11,48 @@ weight of the drone, T_tot > 500 grams. So for a quadcopter it will consist of
 ## Thrust mathematical formula
 
 $$
-T_{prop}(I_a,\eta_{T \tau}) = \frac{1}{K_V}I_a\cdot \eta_{T \tau}
+T_{prop}(I_a,\omega) =  V_b \cdot I_a \cdot \eta_{prop}
 $$
-$I_a$ and $\eta_{T \tau}$ can be found solving the following system of equations:
+$I_a$ can be found solving the following equation:
 
 $$
-\begin{cases}
-\eta_{T \tau} = f(\omega) & \text{(I)} \\
-\eta_{prop} = f(\omega) & \text{(II)} \\
-a I_a^2 \eta_{prop} + b I_a^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}} +c I_a \eta_{prop} = 0 & \text{(III)} \\
-\omega =  V_b K_V - R_a I_a K_V & \text{(IV)}
-\end{cases}
+a \cdot I_a^{\frac{3}{2}} \cdot \eta_{prop}^{\frac{3}{2}} + b \cdot I_a \cdot \eta_{prop} = 0  
 $$
 Where:
-$$
-a = -R_a \sqrt{2\rho A} \\
-b = - \left( \frac{1}{K_V} \right) ^ {\frac{3}{2}} \\
-c = V_b  \sqrt{2\rho A}
-$$
-These reduce to only **two equations** after empirically determining $\eta_{T \tau}(\omega)$ and $\eta_{prop}(\omega)$, and substituting them in $(III)$.
+- $\eta_{prop} = f(\omega) = f(V_b K_V)$
+- $a = - V_b^{\frac{3}{2}}$
+- $b = V_b^2 \frac{D_{prop}}{4} K_V \tan (\alpha_{prop}) \sqrt{2 \rho A}$
 
 ### Mathematical steps
-Given the following mathematical formula:
-$$
-\eta_{T \tau} = \frac{T_{prop}} {\tau_{mot}} \\
-\eta_{prop} = \frac{P_{prop}} {P_e} \\
-K_V = \frac{\omega} {V_a} \\
-K_{\tau} = \frac{1} {K_V} = \frac{\tau_{mot}} {I_a} \\
-P_e = V_a\cdot I_a \\
-V_a = V_b - R_a I_a
-$$
+Given the hypothesis:
+- The motor resistance can be considered negligible, so that $V_b \approx V_a$
+- Each propeller blade can be approximated as a plate with a constant pitch and width.
+<br>
 
-#### Equation III
+Given the following mathematical formulas:
+- $\eta_{prop} = \frac{T_{prop}} {P_e}$ Propeller efficiency
+- $P_{prop} = T_{prop} v_{prop}$ Propeller power
+- $v_{prop} = \frac{D_{prop}}{4}\omega \tan (\alpha_{prop})$ Propeller air velocity
+- $K_V = \frac{\omega} {V_b}$ Motor velocity constant
+- $P_e = V_b I_a$ Electrical power
+#### Current equation proof
 
-The equation III can be found by starting from the following [relationship](https://uav.jreyn.net/quadcopter-design/step-3-static-thrust-and-power):
+The current equation can be found by substituting the above formulas in the following [relationship](https://uav.jreyn.net/quadcopter-design/step-3-static-thrust-and-power):
 $$
 P_{prop} = \frac{{T_{prop}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
 $$
 We can write:
 $$
-P_e \eta_{prop} = \frac{{(\tau_{mot} \eta_{T \tau)}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
-V_a I_a \eta_{prop} = \frac{{(K_{\tau} I_a \eta_{T \tau)}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
-(V_b - R_a I_a) I_a \eta_{prop} = \frac{{(\frac{1}{K_V} I_a \eta_{T \tau)}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
-V_b I_a\eta_{prop} - R_a I_a^2 \eta_{prop} = \frac{{(\frac{1}{K_V})^{\frac{3}{2}} I_a ^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}}}} {\sqrt{2 \rho A}} \\
-V_b I_a\eta_{prop}{\sqrt{2 \rho A}} - R_a I_a^2 \eta_{prop}{\sqrt{2 \rho A}} - {\left(\frac{1}{K_V}\right)^{\frac{3}{2}} I_a ^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}}} = 0
+T_{prop} v_{prop} = \frac{{(P_e \eta_{prop})}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
+P_e \eta_{prop} \frac{D_{prop}}{4} \omega \tan (\alpha_{prop}) = \frac{{(V_b I_a \eta_{prop})}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
+V_b I_a \eta_{prop} \frac{D_{prop}}{4} V_b K_V \tan (\alpha_{prop}) = \frac{{(V_b I_a \eta_{prop})}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
+V_b^2 I_a \eta_{prop} \frac{D_{prop}}{4} K_V \tan (\alpha_{prop}) \sqrt{2 \rho A} = {(V_b I_a \eta_{prop})}^{\frac{3}{2}} \\
 $$
+
 Gathering the terms and ordering the equation we obtain:
 $$
-a I_a^2 \eta_{prop} + b I_a^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}} +c I_a \eta_{prop} = 0
+a \cdot I_a^{\frac{3}{2}} \cdot \eta_{prop}^{\frac{3}{2}} + b \cdot I_a \cdot \eta_{prop} = 0
 $$
 
-#### Equation IV
-
-The equation IV can be found by starting from the following relationship:
-$$
-\omega = K_V V_a \\
-\omega = K_V (V_b - R_a I_a) \\
-\omega = K_V V_b - K_V R_a I_a
-$$
 
 
