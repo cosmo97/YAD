@@ -20,7 +20,7 @@ $$
 \eta_{T \tau} = f(\omega) & \text{(I)} \\
 \eta_{prop} = f(\omega) & \text{(II)} \\
 a I_a^2 \eta_{prop} + b I_a^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}} +c I_a \eta_{prop} = 0 & \text{(III)} \\
-\omega =  V_b K_V - R_a I_a K_V & \text{(VI)}
+\omega =  V_b K_V - R_a I_a K_V & \text{(IV)}
 \end{cases}
 $$
 Where:
@@ -44,14 +44,14 @@ $$
 
 #### Equation III
 
-The equation III can be found by starting from the following relationship:
+The equation III can be found by starting from the following [relationship](https://uav.jreyn.net/quadcopter-design/step-3-static-thrust-and-power):
 $$
 P_{prop} = \frac{{T_{prop}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
 $$
 We can write:
 $$
 P_e \eta_{prop} = \frac{{(\tau_{mot} \eta_{T \tau)}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
-V_a I_a \eta_{prop} = \frac{{(K_T I_a \eta_{T \tau)}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
+V_a I_a \eta_{prop} = \frac{{(K_{\tau} I_a \eta_{T \tau)}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
 (V_b - R_a I_a) I_a \eta_{prop} = \frac{{(\frac{1}{K_V} I_a \eta_{T \tau)}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
 V_b I_a - R_a I_a^2 \eta_{prop} = \frac{{(\frac{1}{K_V})^{\frac{3}{2}} I_a ^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}}}} {\sqrt{2 \rho A}} \\
 V_b I_a{\sqrt{2 \rho A}} - R_a I_a^2 \eta_{prop}{\sqrt{2 \rho A}} - {\left(\frac{1}{K_V}\right)^{\frac{3}{2}} I_a ^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}}} = 0
@@ -61,9 +61,9 @@ $$
 a I_a^2 \eta_{prop} + b I_a^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}} +c I_a \eta_{prop} = 0
 $$
 
-#### Equation VI
+#### Equation IV
 
-The equation VI can be found by starting from the following relationship:
+The equation IV can be found by starting from the following relationship:
 $$
 \omega = K_V V_a \\
 \omega = K_V (V_b - R_a I_a) \\
