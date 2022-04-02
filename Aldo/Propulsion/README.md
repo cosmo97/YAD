@@ -25,11 +25,9 @@ a I_a^2 \eta_{prop} + b I_a^{\frac{3}{2}} \eta_{T \tau}^{\frac{3}{2}} +c I_a \et
 $$
 Where:
 $$
-\begin{align*}
-a &= -R_a \sqrt{2\rho A} \\
-b &= - \Bigl( \frac{1}{K_V} \Bigr) ^ {\frac{3}{2}} \\
-c &= V_b  \sqrt{2\rho A}
-\end{align*}
+a = -R_a \sqrt{2\rho A} \\
+b = - \Bigl( \frac{1}{K_V} \Bigr) ^ {\frac{3}{2}} \\
+c = V_b  \sqrt{2\rho A}
 $$
 These reduce to only **two equations** after empirically determining $\eta_{T \tau}(\omega)$ and $\eta_{prop}(\omega)$, and substituting them in $(III)$.
 
