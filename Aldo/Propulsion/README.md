@@ -1,58 +1,45 @@
+
 # Propulsion
+
 This subsystem is composed by motors, propellers and ESCs.
 
+  
+
 # Requirements
+
 The entire propulsion system must generate a thrust of at least 2 times the
+
 weight of the drone, T_tot > 500 grams. So for a quadcopter it will consist of
+
 4 units with a thrust of at least 125 grams each.
+
+  
 
 # Design
 
-## Thrust mathematical formula
+## Mathematical formulas
 
-$$
-T_{prop}(I_a,\omega) =  V_b \cdot I_a \cdot \eta_{prop}
-$$
-$I_a$ can be found solving the following equation:
+### Propeller specific formulas
 
-$$
-a \cdot I_a^{\frac{3}{2}} \cdot \eta_{prop}^{\frac{3}{2}} + b \cdot I_a \cdot \eta_{prop} = 0  
-$$
-Where:
-- $\eta_{prop} = f(\omega) = f(V_b K_V)$
-- $a = - V_b^{\frac{3}{2}}$
-- $b = V_b^2 \frac{D_{prop}}{4} K_V \tan (\alpha_{prop}) \sqrt{2 \rho A}$
-
-### Mathematical steps
-Given the hypothesis:
-- The motor resistance can be considered negligible, so that $V_b \approx V_a$
-- Each propeller blade can be approximated as a plate with a constant pitch and width.
+- $T= 2 \rho A \cdot v_{air,out}^2$ Propeller thrust
+- $P_p= 2 \rho A \cdot v_{air,out}^3$ Propeller power
+- $v_{air,out} = \lambda \omega R$ Velocity of air  accelerated by propeller
 <br>
 
-Given the following mathematical formulas:
-- $\eta_{prop} = \frac{T_{prop}} {P_e}$ Propeller efficiency
-- $P_{prop} = T_{prop} v_{prop}$ Propeller power
-- $v_{prop} = \frac{D_{prop}}{4}\omega \tan (\alpha_{prop})$ Propeller air velocity
-- $K_V = \frac{\omega} {V_b}$ Motor velocity constant
-- $P_e = V_b I_a$ Electrical power
-#### Current equation proof
+Source: [Aerodynamics of Rotor Blades for Quadrotors](https://arxiv.org/pdf/1601.00733.pdf)
 
-The current equation can be found by substituting the above formulas in the following [relationship](https://uav.jreyn.net/quadcopter-design/step-3-static-thrust-and-power):
-$$
-P_{prop} = \frac{{T_{prop}}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
-$$
-We can write:
-$$
-T_{prop} v_{prop} = \frac{{(P_e \eta_{prop})}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
-P_e \eta_{prop} \frac{D_{prop}}{4} \omega \tan (\alpha_{prop}) = \frac{{(V_b I_a \eta_{prop})}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
-V_b I_a \eta_{prop} \frac{D_{prop}}{4} V_b K_V \tan (\alpha_{prop}) = \frac{{(V_b I_a \eta_{prop})}^{\frac{3}{2}}} {\sqrt{2 \rho A}} \\
-V_b^2 I_a \eta_{prop} \frac{D_{prop}}{4} K_V \tan (\alpha_{prop}) \sqrt{2 \rho A} = {(V_b I_a \eta_{prop})}^{\frac{3}{2}} \\
-$$
+### General knowledge formulas
 
-Gathering the terms and ordering the equation we obtain:
-$$
-a \cdot I_a^{\frac{3}{2}} \cdot \eta_{prop}^{\frac{3}{2}} + b \cdot I_a \cdot \eta_{prop} = 0
-$$
-
-
-
+- $\eta_{p} = \frac{P_{p}} {P_{m}}$ Propeller efficiency
+-  $\eta_{m} = \frac{P_{m}} {P_{a}}$ Motor mechanical efficiency
+- $\eta_{a} = \frac{P_{a}} {P_{e}}$ Motor electrical efficiency
+-  $\eta_{esc} = \frac{P_{e}} {P_{b}}$ Esc efficiency
+- $P_{m} = \tau \cdot \omega$ Mechanical power
+- $P_{a} = V_a \cdot I_a$ Motor armature electrical power
+- $P_{e} = V_{e} \cdot I_a$ Motor electrical power
+- $P_{b} = V_{b,D_c} \cdot I_a$ Battery power
+- $V_{b,D_c}=V_b \cdot D_c$ Duty cycle voltage
+- $K_V = \frac{\omega} {V_a}$ Motor velocity constant
+- $K_T = \frac{1}{K_V} = \frac{\tau}{I_a}$ Motor torque constant
+- $V_a = V_e - R_a\cdot I_a$ Armature voltage
+- $A=\pi\frac{D^2}{4}$ Propeller area
