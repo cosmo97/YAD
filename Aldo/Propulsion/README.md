@@ -8,9 +8,11 @@ This subsystem is composed by motors, propellers and ESCs.
 # Requirements
 
 The entire propulsion system must generate a thrust of at least 2 times the
-
-weight of the drone, T_tot > 500 grams. So for a quadcopter it will consist of
-
+<<<<<<< HEAD
+weight of the drone, $T_{tot} > 500 grams$. So for a quadcopter it will consist of
+=======
+weight of the drone, $T_{tot} > 500 grams$. So for a quadcopter it will consist of
+>>>>>>> 03776286d7a8662f980028017ff2e1166fac313c
 4 units with a thrust of at least 125 grams each.
 
   
