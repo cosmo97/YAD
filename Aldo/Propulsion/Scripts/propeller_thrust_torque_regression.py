@@ -13,6 +13,7 @@ torque_thrust_dataset_path_ = "Aldo/Propulsion/Datasets/Propellers/Torque_thrust
 def create_dataset():
     propellers_dataset = pd.read_csv(propellers_folder + "/Propellers.csv")
     torque_thrust_dataset_ = []
+    propeller_num = 1
     torque_thrust_dataset_cols_ = [
         "Rotation speed (rpm)", "Torque (N⋅m)", "Thrust (kgf)"]
     for propeller in np.array(propellers_dataset):
@@ -25,7 +26,10 @@ def create_dataset():
                 "Propeller diameter [in]"] = propeller[1]
             temp_dataset_[
                 "Propeller pitch [in]"] = propeller[2]
+            temp_dataset_[
+                "Propeller num"] = propeller_num
             torque_thrust_dataset_.append(temp_dataset_)
+        propeller_num = propeller_num + 1
     result = pd.concat(torque_thrust_dataset_)
     result.to_csv(torque_thrust_dataset_path_)
 
@@ -33,7 +37,7 @@ def create_dataset():
 def torque_regression():
     # extract data
     input_columns_ = [
-        "Rotation speed (rpm)", "Propeller diameter [in]", "Propeller pitch [in]"]
+        "Rotation speed (rpm)", "Propeller diameter [in]", "Propeller pitch [in]", "Propeller num"]
     output_columns_ = ["Torque (N⋅m)"]
     x_, y_ = regression_methods.extract_data_from_csv(
         torque_thrust_dataset_path_, input_columns_, output_columns_)
@@ -77,21 +81,30 @@ def torque_regression():
     print("########################################################################################################")
 
     # plot
-    plt.scatter(x_[:, 0], y_, label="true torque")
-    plt.scatter(x_[:, 0], y_hat_, label="estimated torque")
-    plt.scatter(x_[:, 0], y_hat_max_, label="estimated best case torque")
-    plt.scatter(x_[:, 0], y_hat_min_, label="estimated worst case torque")
-    plt.xlabel("w [rpm]")
-    plt.ylabel("C [Nm]")
-    plt.legend()
-    plt.grid()
-    plt.show()
+    num_propellers = int(max(x_[:, 3]))
+    for propeller in range(1, num_propellers):
+        propeller_indices = [i for i, x in enumerate(
+            x_[:, 3]) if x == propeller]
+        plt.scatter(x_[propeller_indices, 0], y_hat_[
+                    propeller_indices], label="estimated torque", s=10)
+        plt.scatter(x_[propeller_indices, 0], y_hat_max_[
+                    propeller_indices], label="estimated best case torque", s=10)
+        plt.scatter(x_[propeller_indices, 0], y_hat_min_[
+                    propeller_indices], label="estimated worst case torque", s=10)
+        plt.scatter(x_[propeller_indices, 0], y_[
+            propeller_indices], label="true torque", s=5)
+        plt.xlabel("w [rpm]")
+        plt.ylabel("C [Nm]")
+        plt.title(f"Propeller {propeller} torque")
+        plt.legend()
+        plt.grid()
+        plt.show()
 
 
 def thrust_regression():
     # extract data
     input_columns_ = [
-        "Rotation speed (rpm)", "Propeller diameter [in]", "Propeller pitch [in]"]
+        "Rotation speed (rpm)", "Propeller diameter [in]", "Propeller pitch [in]", "Propeller num"]
     output_columns_ = ["Thrust (kgf)"]
     x_, y_ = regression_methods.extract_data_from_csv(
         torque_thrust_dataset_path_, input_columns_, output_columns_)
@@ -135,18 +148,28 @@ def thrust_regression():
     print("########################################################################################################")
 
     # plot
-    plt.scatter(x_[:, 0], y_, label="true thrust")
-    plt.scatter(x_[:, 0], y_hat_, label="estimated thrust")
-    plt.scatter(x_[:, 0], y_hat_max_, label="estimated best case thrust")
-    plt.scatter(x_[:, 0], y_hat_min_, label="estimated worst case thrust")
-    plt.xlabel("w [rpm]")
-    plt.ylabel("T [Kgf]")
-    plt.legend()
-    plt.grid()
-    plt.show()
+    num_propellers = int(max(x_[:, 3]))
+    for propeller in range(1, num_propellers):
+        propeller_indices = [i for i, x in enumerate(
+            x_[:, 3]) if x == propeller]
+        plt.scatter(x_[propeller_indices, 0], y_hat_[
+                    propeller_indices], label="estimated thrust", s=10)
+        plt.scatter(x_[propeller_indices, 0], y_hat_max_[
+                    propeller_indices], label="estimated best case thrust", s=10)
+        plt.scatter(x_[propeller_indices, 0], y_hat_min_[
+                    propeller_indices], label="estimated worst case thrust", s=10)
+        plt.scatter(x_[propeller_indices, 0], y_[
+                    propeller_indices], label="true thrust", s=5)
+        plt.xlabel("w [rpm]")
+        plt.ylabel("T [Kgf]")
+        plt.title(f"Propeller {propeller} thrust")
+        plt.legend()
+        plt.grid()
+        plt.show()
 
 
 def main():
+    create_dataset()
     torque_regression()
     thrust_regression()
 
