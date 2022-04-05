@@ -58,17 +58,17 @@ def torque_regression():
         f"Torque[Nm] = {k1:.2e}[Nm/rpm*in^2] * rot_speed[rpm]^{k2:.2e} * diameter[in]^{k3:.2e} * pitch[in]^{k4:.2e}")
 
     # compute parameters std dev
-    std_dev = np.sqrt(np.diag(coeff_var))
+    coeff_std_dev = np.sqrt(np.diag(coeff_var))
 
-    # compute their min and max values with a 95% confidence interval
-    k1_min = k1 - 2*std_dev[0]
-    k1_max = k1 + 2*std_dev[0]
-    k2_min = k2 - 2*std_dev[1]
-    k2_max = k2 + 2*std_dev[1]
-    k3_min = k3 - 2*std_dev[2]
-    k3_max = k3 + 2*std_dev[2]
-    k4_min = k4 - 2*std_dev[3]
-    k4_max = k4 + 2*std_dev[3]
+    # compute their min and max values with a 66% confidence interval
+    k1_min = k1 - coeff_std_dev[0]
+    k1_max = k1 + coeff_std_dev[0]
+    k2_min = k2 - coeff_std_dev[1]
+    k2_max = k2 + coeff_std_dev[1]
+    k3_min = k3 - coeff_std_dev[2]
+    k3_max = k3 + coeff_std_dev[2]
+    k4_min = k4 - coeff_std_dev[3]
+    k4_max = k4 + coeff_std_dev[3]
 
     # predict data
     y_hat_ = fct_torque(x_, k1, k2, k3, k4)
@@ -82,7 +82,7 @@ def torque_regression():
 
     # plot
     num_propellers = int(max(x_[:, 3]))
-    for propeller in range(1, num_propellers):
+    for propeller in range(1, num_propellers+1):
         propeller_indices = [i for i, x in enumerate(
             x_[:, 3]) if x == propeller]
         plt.scatter(x_[propeller_indices, 0], y_hat_[
@@ -125,17 +125,17 @@ def thrust_regression():
         f"Thrust[Kgf] = {k1:.2e}[Kgf/rpm*in^2] * rot_speed[rpm]^{k2:.2e} * diameter[in]^{k3:.2e} * pitch[in]^{k4:.2e}")
 
     # compute parameters std dev
-    std_dev = np.sqrt(np.diag(coeff_var))
+    coeff_std_dev = np.sqrt(np.diag(coeff_var))
 
-    # compute their min and max values with a 95% confidence interval
-    k1_min = k1 - 2*std_dev[0]
-    k1_max = k1 + 2*std_dev[0]
-    k2_min = k2 - 2*std_dev[1]
-    k2_max = k2 + 2*std_dev[1]
-    k3_min = k3 - 2*std_dev[2]
-    k3_max = k3 + 2*std_dev[2]
-    k4_min = k4 - 2*std_dev[3]
-    k4_max = k4 + 2*std_dev[3]
+    # compute their min and max values with a 66% confidence interval
+    k1_min = k1 - coeff_std_dev[0]
+    k1_max = k1 + coeff_std_dev[0]
+    k2_min = k2 - coeff_std_dev[1]
+    k2_max = k2 + coeff_std_dev[1]
+    k3_min = k3 - coeff_std_dev[2]
+    k3_max = k3 + coeff_std_dev[2]
+    k4_min = k4 - coeff_std_dev[3]
+    k4_max = k4 + coeff_std_dev[3]
 
     # predict data
     y_hat_ = fct_thrust(x_, k1, k2, k3, k4)
@@ -149,7 +149,7 @@ def thrust_regression():
 
     # plot
     num_propellers = int(max(x_[:, 3]))
-    for propeller in range(1, num_propellers):
+    for propeller in range(1, num_propellers+1):
         propeller_indices = [i for i, x in enumerate(
             x_[:, 3]) if x == propeller]
         plt.scatter(x_[propeller_indices, 0], y_hat_[
