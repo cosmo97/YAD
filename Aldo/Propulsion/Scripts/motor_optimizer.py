@@ -5,46 +5,31 @@ from matplotlib import pyplot as plt
 
 BATTERIES_DATASET = "Aldo/Propulsion/Datasets/Batteries/Batteries.csv"
 MOTORS_DATASET = "Aldo/Propulsion/Datasets/Motors/Motors.csv"
-PROPELLERS_DATASET = "Aldo/Propulsion/Datasets/Propellers/Propellers_ideal.csv"
+PROPELLERS_DATASET = "Aldo/Propulsion/Datasets/Propellers/Propellers.csv"
 
 
-MIN_THRUST = 0.500  # kgf. 2 times of the weight for control authority
-MAX_WEIGHT = 250  # g. Maybe less for frame/board
+MIN_THRUST = 0.500      # kgf. 2 times of the weight for control authority
+HOVER_THRUST = 0.250    # kgf
+MAX_WEIGHT = 250        # g. Maybe less for frame/board
+MIN_HOVERING_TIME = 10  # min
+MIN_ALLOWED_PWM = 0.01
+MAX_ALLOWED_PWM = 1.00
 
 
-def motor_speed(x, args):
-    rot_speed = x[0]
-    Kv = args[2]
-    voltage = args[3]
-    resistance = args[4]
-
-    return rot_speed - Kv*voltage
+def motor_speed(rot_speed, Kv, pwm, voltage):
+    return rot_speed - Kv*pwm*voltage
 
 
-def motor_torque(x, args):
-    torque = x[1]
-    I = x[3]
-    Kv = args[2]
-
-    return torque - I/Kv
+def motor_torque(torque, current, Kv):
+    return torque - current/(Kv*np.pi/30)
 
 
-def prop_torque(x, args):
-    rot_speed = x[0]
-    torque = x[1]
-    diameter = args[0]
-    pitch = args[1]
-
+def prop_torque(rot_speed, torque, diameter, pitch):
     return torque - 5.75e-14*(rot_speed**1.85e+00) * \
         (diameter**3.44e+00)*(pitch**2.59e+00)
 
 
-def prop_thrust(x, args):
-    rot_speed = x[0]
-    thrust = x[2]
-    diameter = args[0]
-    pitch = args[1]
-
+def prop_thrust(rot_speed, thrust, diameter, pitch):
     return thrust - 4.33e-12*(rot_speed**1.88e+00) * \
         (diameter**2.83e+00)*(pitch**1.60e+00)
 
@@ -55,63 +40,113 @@ def main():
     motors_dataset = pd.read_csv(MOTORS_DATASET)
     propellers_dataset = pd.read_csv(PROPELLERS_DATASET)
 
-    # List of valid solutions
-    solutions = []
+    # List of combinations
+    configurations = []
 
-    # Cycle to all propeller-motor possible configurations
+    # Cycle to all possible configurations
     for battery in np.array(batteries_dataset):
         for motor in np.array(motors_dataset):
-
-            # Check if motor is rated for that voltage
-            if battery[1] != motor[7]:
-                break
-
             for propeller in np.array(propellers_dataset):
-                # Calculate the work point between propeller and motor curves
-                def func(x, args):
+
+                # Work point at 100% PWM
+                def func_max_pwm(x, args):
+                    rot_speed, torque, current, thrust = x
+                    diameter, pitch, Kv, voltage, pwm = args
+
                     return [
-                        prop_torque(x, args),
-                        prop_thrust(x, args),
-                        motor_speed(x, args),
-                        motor_torque(x, args)
+                        prop_torque(rot_speed, torque, diameter, pitch),
+                        prop_thrust(rot_speed, thrust, diameter, pitch),
+                        motor_speed(rot_speed, Kv, pwm, voltage),
+                        motor_torque(torque, current, Kv)
                     ]
 
-                res = optimize.fsolve(
-                    func,
+                res_max_pwm = optimize.fsolve(
+                    func_max_pwm,
                     x0=[0, 0, 0, 0],
                     args=[propeller[1], propeller[2],
-                          motor[5], motor[7], motor[8]]
+                          motor[5], battery[1], MAX_ALLOWED_PWM]
                 )
 
-                # Solution validity checks
-                solutions.append([
-                    *battery, *motor, *propeller, *res
+                # Work point at controlled thrust
+                def func_fixed_thrust(x, args):
+                    rot_speed, torque, current, pwm = x
+                    diameter, pitch, Kv, voltage, thrust = args
+
+                    return [
+                        prop_torque(rot_speed, torque, diameter, pitch),
+                        prop_thrust(rot_speed, thrust, diameter, pitch),
+                        motor_speed(rot_speed, Kv, pwm, voltage),
+                        motor_torque(torque, current, Kv)
+                    ]
+
+                res_fixed_thrust = optimize.fsolve(
+                    func_fixed_thrust,
+                    x0=[0, 0, 0, 0],
+                    args=[propeller[1], propeller[2],
+                          motor[5], battery[1], HOVER_THRUST]
+                )
+
+                # Save configurations and results
+                configurations.append([
+                    *battery, *motor, *propeller,
+                    *res_max_pwm, *res_fixed_thrust
                 ])
 
-    # Filter invalid solutions
-    print(f"Found {len(solutions)} possible combinations")
-    # print(solutions)
+    print(f"Found {len(configurations)} possible combinations")
+    # print(configurations)
 
-    def combination_filter(solution):
+    # Configurations filtering
+    def combination_filter(conf):
         return \
-            4*solution[25] > MIN_THRUST \
-            and (solution[7]+4*solution[14]) < MAX_WEIGHT \
-            # and (0.001*solution[0]/solution[26]) > 15/60
+            4*float(conf[25]) > MIN_THRUST \
+            and (float(conf[7])+4*float(conf[14])+4*float(conf[19])) < MAX_WEIGHT \
+            and float(conf[29]) < MAX_ALLOWED_PWM \
+            and float(conf[29]) > MIN_ALLOWED_PWM \
+            and 60*((0.001*float(conf[0]))/(4*float(conf[28]))) > MIN_HOVERING_TIME
 
-    filtered_solutions = np.array(list(filter(combination_filter, solutions)))
-    print(f"Found {len(filtered_solutions)} accettable combinations")
-    print(filtered_solutions)
+    flt = np.array(list(filter(combination_filter, configurations)))
+    print(f"Found {len(flt)} accettable combinations")
 
-    thrust = np.array(filtered_solutions[:, 25], dtype=float)
-    battery_weight = np.array(filtered_solutions[:, 7], dtype=float)
-    motor_weight = np.array(filtered_solutions[:, 14], dtype=float)
+    for it in flt:
+        print(f"""
+        ========================================================================
+        Configuration:
+            Battery: {it[2]}
+                Capacity: {it[0]} mAh
+                Nominal voltage: {it[1]} V
+                Weight: {it[7]} g
+            Motors: {it[8]}
+                Kv: {it[13]} rpm/V
+                Weight: {it[14]} g
+                Resistance: {it[15]} Ohm
+            Propeller: {it[16]}
+                Diameter: {it[17]} in
+                Pitch: {it[18]} in
+                Weight: {it[19]} g
+        Results:
+            Total weight: {float(it[7])+4*float(it[14])+4*float(it[19])}
+            Hovering time: {60*((0.001*float(it[0]))/(4*float(it[28])))} min
+            Max PWM (single motor):
+                Speed: {it[22]} rpm
+                Torque: {it[23]} Nm
+                Current (single/total): {it[24]}/{4*float(it[24])} A
+                Thrust (single/total): {it[25]}/{4*float(it[25])} Kgf
+                Electrical Power: {float(it[24])*float(it[1])} Watt
+                Mechanical Power: {(float(it[22])*np.pi/30)*float(it[23])} Watt
+            Hovering (single motor):
+                Speed: {it[26]} rpm
+                Torque: {it[27]} Nm
+                Current (single/total): {it[28]}/{4*float(it[28])} A
+                PWM: {it[29]} %
+                Electrical Power: {float(it[28])*float(it[1])} Watt
+                Mechanical Power: {(float(it[26])*np.pi/30)*float(it[27])} Watt
+            
+        """)
+
+    thrust = np.array(flt[:, 25], dtype=float)
+    battery_weight = np.array(flt[:, 7], dtype=float)
+    motor_weight = np.array(flt[:, 14], dtype=float)
     total_weight = battery_weight+4*motor_weight
-
-    plt.scatter(
-        total_weight,
-        thrust
-    )
-    plt.show()
 
 
 if __name__ == "__main__":
