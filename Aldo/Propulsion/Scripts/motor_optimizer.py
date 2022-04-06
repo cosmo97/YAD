@@ -3,131 +3,114 @@ import pandas as pd
 from scipy import optimize
 from matplotlib import pyplot as plt
 
-PROPELLERS_DATASET = "Aldo/Propulsion/Datasets/Propellers/Propellers.csv"
+BATTERIES_DATASET = "Aldo/Propulsion/Datasets/Batteries/Batteries.csv"
 MOTORS_DATASET = "Aldo/Propulsion/Datasets/Motors/Motors.csv"
-
-# For a 250 grams quadcopter you need a thrust of 0.25/4=62.5 Kgf
-MIN_THRUST = 0.125   # 2 times min for control authority
-MAX_THRUST = 0.3125  # 5 times max to discard uncontrollable motors
+PROPELLERS_DATASET = "Aldo/Propulsion/Datasets/Propellers/Propellers_ideal.csv"
 
 
-def prop_torque(x, args):
-    """_summary_ TODO
-
-    Args:
-        x (list): TODO
-        args (list): TODO
-
-    Returns:
-        _type_: TODO
-    """
-    rot_speed_ = x[0]
-    torque_ = x[1]
-    diameter_ = args[0]
-    pitch_ = args[1]
-
-    ret = torque_ - 5.89e-14*(rot_speed_**1.96e+00) * \
-        (diameter_**3.01e+00)*(pitch_**2.38e+00)
-
-    return ret
-
-
-def prop_thrust(x, args):
-    """TODO
-
-    Args:
-        x (_type_): TODO
-        args (_type_): TODO
-
-    Returns:
-        _type_: TODO
-    """
-    rot_speed_ = x[0]
-    thrust_ = x[2]
-    diameter_ = args[0]
-    pitch_ = args[1]
-
-    ret = thrust_ - 1.76e-11*(rot_speed_**1.81e+00) * \
-        (diameter_**2.49e+00)*(pitch_**1.51e+00)
-
-    return ret
+MIN_THRUST = 0.500  # kgf. 2 times of the weight for control authority
+MAX_WEIGHT = 250  # g. Maybe less for frame/board
 
 
 def motor_speed(x, args):
-    """_summary_
+    rot_speed = x[0]
+    Kv = args[2]
+    voltage = args[3]
+    resistance = args[4]
 
-    Args:
-        x (_type_): TODO
-        args (_type_): TODO
+    return rot_speed - Kv*voltage
 
-    Returns:
-        _type_: TODO
-    """
-    rot_speed_ = x[0]
+
+def motor_torque(x, args):
+    torque = x[1]
+    I = x[3]
     Kv = args[2]
 
-    ret = rot_speed_ - Kv*12
+    return torque - I/Kv
 
-    return ret
+
+def prop_torque(x, args):
+    rot_speed = x[0]
+    torque = x[1]
+    diameter = args[0]
+    pitch = args[1]
+
+    return torque - 5.75e-14*(rot_speed**1.85e+00) * \
+        (diameter**3.44e+00)*(pitch**2.59e+00)
+
+
+def prop_thrust(x, args):
+    rot_speed = x[0]
+    thrust = x[2]
+    diameter = args[0]
+    pitch = args[1]
+
+    return thrust - 4.33e-12*(rot_speed**1.88e+00) * \
+        (diameter**2.83e+00)*(pitch**1.60e+00)
 
 
 def main():
-    """_summary_
-
-    Returns:
-        _type_: TODO
-    """
     # Retrieve propellers and motors parameters
-    propellers_dataset = pd.read_csv(PROPELLERS_DATASET)
+    batteries_dataset = pd.read_csv(BATTERIES_DATASET)
     motors_dataset = pd.read_csv(MOTORS_DATASET)
+    propellers_dataset = pd.read_csv(PROPELLERS_DATASET)
 
     # List of valid solutions
     solutions = []
 
     # Cycle to all propeller-motor possible configurations
-    for propeller in np.array(propellers_dataset):
+    for battery in np.array(batteries_dataset):
         for motor in np.array(motors_dataset):
-            print(f"Solving {propeller[0]} - {motor[0]}")
 
-            # Calculate the work point between propeller and motor curves
-            def func(x, args):
-                return [
-                    prop_torque(x, args),
-                    prop_thrust(x, args),
-                    motor_speed(x, args)
-                ]
+            # Check if motor is rated for that voltage
+            if battery[1] != motor[7]:
+                break
 
-            res = optimize.fsolve(
-                func,
-                x0=[0, 0, 0],
-                args=[propeller[1], propeller[2], motor[5]]
-            )
+            for propeller in np.array(propellers_dataset):
+                # Calculate the work point between propeller and motor curves
+                def func(x, args):
+                    return [
+                        prop_torque(x, args),
+                        prop_thrust(x, args),
+                        motor_speed(x, args),
+                        motor_torque(x, args)
+                    ]
 
-            # Solution validity checks
-            if(res[2] > MIN_THRUST and res[2] < MAX_THRUST):
+                res = optimize.fsolve(
+                    func,
+                    x0=[0, 0, 0, 0],
+                    args=[propeller[1], propeller[2],
+                          motor[5], motor[7], motor[8]]
+                )
+
+                # Solution validity checks
                 solutions.append([
-                    propeller[0]+"-"+motor[0], propeller[3]+motor[6], res[2]
+                    *battery, *motor, *propeller, *res
                 ])
 
-                print(f"""
-                Speed  [rpm]: {res[0]}
-                Torque  [Nm]: {res[1]}
-                Thrust [Kgf]: {res[2]}
-                """)
-            else:
-                print(f"""
-                No suitable solutions
-                """)
+    # Filter invalid solutions
+    print(f"Found {len(solutions)} possible combinations")
+    # print(solutions)
 
-    # Export only valid solutions
-    solutions = np.array(solutions)
-    weight = np.array(solutions[:, 1], dtype=float)
-    thrust = np.array(solutions[:, 2], dtype=float)
+    def combination_filter(solution):
+        return \
+            4*solution[25] > MIN_THRUST \
+            and (solution[7]+4*solution[14]) < MAX_WEIGHT \
+            # and (0.001*solution[0]/solution[26]) > 15/60
 
-    plt.scatter(weight, thrust)
-    for i, sol in enumerate(solutions):
-        plt.annotate(sol[0], (weight[i], thrust[i]))
+    filtered_solutions = np.array(list(filter(combination_filter, solutions)))
+    print(f"Found {len(filtered_solutions)} accettable combinations")
+    print(filtered_solutions)
 
+    thrust = np.array(filtered_solutions[:, 25], dtype=float)
+    battery_weight = np.array(filtered_solutions[:, 7], dtype=float)
+    motor_weight = np.array(filtered_solutions[:, 14], dtype=float)
+    total_weight = battery_weight+4*motor_weight
+
+    plt.scatter(
+        total_weight,
+        thrust
+    )
     plt.show()
 
 
