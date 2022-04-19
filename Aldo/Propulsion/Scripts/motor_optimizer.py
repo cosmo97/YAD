@@ -11,13 +11,16 @@ PROPELLERS_DATASET = "Aldo/Propulsion/Datasets/Propellers/Propellers.csv"
 MIN_THRUST = 0.500      # kgf. 2 times of the weight for control authority
 HOVER_THRUST = 0.250    # kgf
 MAX_WEIGHT = 250        # g. Maybe less for frame/board
-MIN_HOVERING_TIME = 10  # min
+MIN_HOVERING_TIME = 5  # min
 MIN_ALLOWED_PWM = 0.01
 MAX_ALLOWED_PWM = 1.00
 
+# Todo: compute or add resistance for each motor
+DEFAULT_RESISTANCE = 0.05  # Ohm
 
-def motor_speed(rot_speed, Kv, pwm, voltage):
-    return rot_speed - Kv*pwm*voltage
+
+def motor_speed(rot_speed, Kv, pwm, voltage, current, resistance=DEFAULT_RESISTANCE):
+    return rot_speed - Kv*(pwm*voltage - resistance*current)
 
 
 def motor_torque(torque, current, Kv):
@@ -32,6 +35,16 @@ def prop_torque(rot_speed, torque, diameter, pitch):
 def prop_thrust(rot_speed, thrust, diameter, pitch):
     return thrust - 4.33e-12*(rot_speed**1.88e+00) * \
         (diameter**2.83e+00)*(pitch**1.60e+00)
+
+
+def combination_filter(conf):
+    # Configurations filtering
+    return \
+        4*float(conf[25]) > MIN_THRUST \
+        and (float(conf[7])+4*float(conf[14])+4*float(conf[19])) < MAX_WEIGHT \
+        and float(conf[29]) < MAX_ALLOWED_PWM \
+        and float(conf[29]) > MIN_ALLOWED_PWM \
+        and 60*((0.001*float(conf[0]))/(4*float(conf[28]))) > MIN_HOVERING_TIME
 
 
 def main():
@@ -56,7 +69,7 @@ def main():
                     return [
                         prop_torque(rot_speed, torque, diameter, pitch),
                         prop_thrust(rot_speed, thrust, diameter, pitch),
-                        motor_speed(rot_speed, Kv, pwm, voltage),
+                        motor_speed(rot_speed, Kv, pwm, voltage, current),
                         motor_torque(torque, current, Kv)
                     ]
 
@@ -75,7 +88,7 @@ def main():
                     return [
                         prop_torque(rot_speed, torque, diameter, pitch),
                         prop_thrust(rot_speed, thrust, diameter, pitch),
-                        motor_speed(rot_speed, Kv, pwm, voltage),
+                        motor_speed(rot_speed, Kv, pwm, voltage, current),
                         motor_torque(torque, current, Kv)
                     ]
 
@@ -93,16 +106,6 @@ def main():
                 ])
 
     print(f"Found {len(configurations)} possible combinations")
-    # print(configurations)
-
-    # Configurations filtering
-    def combination_filter(conf):
-        return \
-            4*float(conf[25]) > MIN_THRUST \
-            and (float(conf[7])+4*float(conf[14])+4*float(conf[19])) < MAX_WEIGHT \
-            and float(conf[29]) < MAX_ALLOWED_PWM \
-            and float(conf[29]) > MIN_ALLOWED_PWM \
-            and 60*((0.001*float(conf[0]))/(4*float(conf[28]))) > MIN_HOVERING_TIME
 
     flt = np.array(list(filter(combination_filter, configurations)))
     print(f"Found {len(flt)} accettable combinations")
@@ -124,29 +127,28 @@ def main():
                 Pitch: {it[18]} in
                 Weight: {it[19]} g
         Results:
-            Total weight: {float(it[7])+4*float(it[14])+4*float(it[19])}
-            Hovering time: {60*((0.001*float(it[0]))/(4*float(it[28])))} min
+            Total weight: {float(float(it[7])+4*float(it[14])+4*float(it[19])) :.2f} g
+            Hovering time: {float(60*((0.001*float(it[0]))/(4*float(it[28])))) :.2f} min
             Max PWM (single motor):
                 Speed: {it[22]} rpm
-                Torque: {it[23]} Nm
-                Current (single/total): {it[24]}/{4*float(it[24])} A
-                Thrust (single/total): {it[25]}/{4*float(it[25])} Kgf
-                Electrical Power: {float(it[24])*float(it[1])} Watt
-                Mechanical Power: {(float(it[22])*np.pi/30)*float(it[23])} Watt
+                Torque: {float(it[23]) :.4f} Nm
+                Current (single / total): {float(it[24]) :.2f} / {float(4*float(it[24])) :.2f} A
+                Thrust (single / total): {float(it[25]) :.4f} / {float(4*float(it[25])) :.4f} Kgf
+                Electrical Power: {float(float(it[24])*float(it[1])) :.2f} Watt
+                Mechanical Power: {float((float(it[22])*np.pi/30)*float(it[23])) :.2f} Watt
             Hovering (single motor):
-                Speed: {it[26]} rpm
-                Torque: {it[27]} Nm
-                Current (single/total): {it[28]}/{4*float(it[28])} A
-                PWM: {it[29]} %
-                Electrical Power: {float(it[28])*float(it[1])} Watt
-                Mechanical Power: {(float(it[26])*np.pi/30)*float(it[27])} Watt
-            
+                Speed: {float(it[26]) :.2f} rpm
+                Torque: {float(it[27]) :.4f} Nm
+                Current (single / total): {float(it[28]) :.2f} / {float(4*float(it[28])) :.2f} A
+                PWM: {float(it[29]) :.2f} %
+                Electrical Power: {float(float(it[28])*float(it[1])) :.2f} Watt
+                Mechanical Power: {float((float(it[26])*np.pi/30)*float(it[27])) :.2f} Watt
         """)
 
     thrust = np.array(flt[:, 25], dtype=float)
     battery_weight = np.array(flt[:, 7], dtype=float)
     motor_weight = np.array(flt[:, 14], dtype=float)
-    total_weight = battery_weight+4*motor_weight
+    total_weight = battery_weight + 4*motor_weight
 
 
 if __name__ == "__main__":
