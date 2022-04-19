@@ -11,7 +11,7 @@ PROPELLERS_DATASET = "Aldo/Propulsion/Datasets/Propellers/Propellers.csv"
 MIN_THRUST = 0.500      # kgf. 2 times of the weight for control authority
 HOVER_THRUST = 0.250    # kgf
 MAX_WEIGHT = 250        # g. Maybe less for frame/board
-MIN_HOVERING_TIME = 5  # min
+MIN_HOVERING_TIME = 8  # min
 MIN_ALLOWED_PWM = 0.01
 MAX_ALLOWED_PWM = 1.00
 
