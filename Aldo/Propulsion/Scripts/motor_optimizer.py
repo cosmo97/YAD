@@ -2,6 +2,7 @@ import math
 import numpy as np
 import pandas as pd
 from scipy import optimize
+from tqdm import tqdm
 
 # Datasets
 BATTERIES_DATASET = "Aldo/Propulsion/Datasets/Batteries/Batteries.csv"
@@ -9,48 +10,45 @@ MOTORS_DATASET = "Aldo/Propulsion/Datasets/Motors/Motors.csv"
 PROPELLERS_DATASET = "Aldo/Propulsion/Datasets/Propellers/Propellers.csv"
 
 # System constraints
-MIN_THRUST = 0.500      # kgf, 2 times of the weight for control authority
-HOVER_THRUST = 0.250    # kgf
-MAX_WEIGHT = 250        # grams, maybe less for frame/board
-MIN_HOVERING_TIME = 8   # minutes
+MIN_PEAK_THRUST = 0.500  # kgf, 2 times of the weight for control authority
+HOVERING_THRUST = 0.250  # kgf
+MAX_WEIGHT = 250         # grams, maybe less for frame/board
+MIN_HOVERING_TIME = 8    # minutes
 
 # Default values if NaN, TODO
 DEFAULT_RESISTANCE = 0.0      # Ohm
 DEFAULT_NOLOAD_CURRENT = 0.0  # Ampere
 
 
-def motor_speed(rot_speed, Kv, pwm, voltage, current, resistance):
+def motor_speed(rot_speed, kv, pwm, voltage, resistance, current):
     """TODO
 
     Args:
         rot_speed (_type_): _description_
-        Kv (_type_): _description_
+        kv (_type_): _description_
         pwm (_type_): _description_
         voltage (_type_): _description_
-        current (_type_): _description_
         resistance (_type_): _description_
+        current (_type_): _description_
 
     Returns:
         _type_: _description_
     """
 
-    if pwm > 1.0:
-        pwm = 1.0
-
     if math.isnan(resistance):
         resistance = DEFAULT_RESISTANCE
 
-    return rot_speed - Kv*(pwm*voltage - resistance*current)
+    return rot_speed - kv*(pwm*voltage - resistance*current)
 
 
-def motor_torque(torque, current, Kv, noload_current):
+def motor_torque(torque, current, noload_current, kv):
     """TODO
 
     Args:
         torque (_type_): _description_
         current (_type_): _description_
-        Kv (_type_): _description_
         noload_current (_type_): _description_
+        kv (_type_): _description_
 
     Returns:
         _type_: _description_
@@ -59,15 +57,15 @@ def motor_torque(torque, current, Kv, noload_current):
     if math.isnan(noload_current):
         noload_current = DEFAULT_NOLOAD_CURRENT
 
-    return torque - (current - noload_current)/(Kv*np.pi/30)
+    return torque - (current - noload_current)/(kv*np.pi/30)
 
 
-def prop_torque(rot_speed, torque, diameter, pitch):
+def prop_torque(torque, rot_speed, diameter, pitch):
     """TODO
 
     Args:
-        rot_speed (_type_): _description_
         torque (_type_): _description_
+        rot_speed (_type_): _description_
         diameter (_type_): _description_
         pitch (_type_): _description_
 
@@ -79,23 +77,24 @@ def prop_torque(rot_speed, torque, diameter, pitch):
         (diameter**3.44e+00)*(pitch**2.59e+00)
 
 
-def prop_thrust(rot_speed, thrust, diameter, pitch):
+def prop_thrust(thrust, rot_speed, diameter, pitch):
     """TODO
 
     Args:
-        rot_speed (_type_): _description_
         thrust (_type_): _description_
+        rot_speed (_type_): _description_
         diameter (_type_): _description_
         pitch (_type_): _description_
 
     Returns:
         _type_: _description_
     """
+
     return thrust - 4.33e-12*(rot_speed**1.88e+00) * \
         (diameter**2.83e+00)*(pitch**1.60e+00)
 
 
-def equations_at_max_pwm(x, args):
+def equations_at_peak(x, *args):
     """TODO
 
     Args:
@@ -107,17 +106,17 @@ def equations_at_max_pwm(x, args):
     """
 
     rot_speed, torque, current, thrust = x
-    diameter, pitch, Kv, voltage, noload_current, resistance = args
+    diameter, pitch, kv, voltage, noload_current, resistance = args
 
     return [
-        prop_torque(rot_speed, torque, diameter, pitch),
-        prop_thrust(rot_speed, thrust, diameter, pitch),
-        motor_speed(rot_speed, Kv, 1.0, voltage, current, resistance),
-        motor_torque(torque, current, Kv, noload_current)
+        prop_torque(torque, rot_speed, diameter, pitch),
+        prop_thrust(thrust, rot_speed, diameter, pitch),
+        motor_speed(rot_speed, kv, 1.0, voltage, resistance, current),
+        motor_torque(torque, current, noload_current, kv)
     ]
 
 
-def equations_at_hovering(x, args):
+def equations_at_hovering(x, *args):
     """TODO
 
     Args:
@@ -129,35 +128,37 @@ def equations_at_hovering(x, args):
     """
 
     rot_speed, torque, current, pwm = x
-    diameter, pitch, Kv, voltage, noload_current, resistance = args
+    diameter, pitch, kv, voltage, noload_current, resistance = args
 
     return [
-        prop_torque(rot_speed, torque, diameter, pitch),
-        prop_thrust(rot_speed, HOVER_THRUST, diameter, pitch),
-        motor_speed(rot_speed, Kv, pwm, voltage, current, resistance),
-        motor_torque(torque, current, Kv, noload_current)
+        prop_torque(torque, rot_speed, diameter, pitch),
+        prop_thrust(HOVERING_THRUST, rot_speed, diameter, pitch),
+        motor_speed(rot_speed, kv, pwm, voltage, resistance, current),
+        motor_torque(torque, current, noload_current, kv)
     ]
 
 
-def solve_equations(x, equations):
+def solve_equations(x, equations, x0=[0, 0, 0, 0], bounds=(-math.inf, math.inf)):
     """TODO
 
     Args:
         df (_type_): _description_
     """
 
-    return optimize.fsolve(
-        equations,
-        x0=[0, 0, 0, 0],
-        args=x[[
-            "Propeller diameter (in)",
-            "Propeller pitch (in)",
-            "KV [rpm/V]",
-            "Nominal voltage [V]",
-            "No load current (A)",
-            "Resistance (Ohm)"
-        ]]
+    sol = optimize.least_squares(
+        equations, x0, "2-point", bounds,
+        args=(x[[
+                "Propeller diameter (in)",
+                "Propeller pitch (in)",
+                "KV (rpm/V)",
+                "Nominal voltage (V)",
+                "No load current (A)",
+                "Resistance (Ohm)"
+                ]]),
+        method="dogbox"
     )
+
+    return sol.x
 
 
 def main():
@@ -166,6 +167,8 @@ def main():
     Returns:
         _type_: _description_
     """
+
+    tqdm.pandas()
 
     # Retrieve batteries/motors/propellers parameters
     batteries_df = pd.read_csv(BATTERIES_DATASET)
@@ -176,30 +179,58 @@ def main():
     combination_df = pd.merge(batteries_df, motors_df, how="cross")
     combination_df = pd.merge(combination_df, propellers_df, how="cross")
 
-    # Solve system for 100% pwm
+    print(f"Possible combinations: {len(combination_df)}")
+
+    # Filtering weight
+    mask = (combination_df["Battery weight (g)"] +
+            4 * (combination_df["Motor weight (g)"] +
+                 combination_df["Propeller weight (g)"])) < MAX_WEIGHT
+    combination_df = combination_df[mask]
+
+    print(f"Weight filtered combination: {len(combination_df)}")
+
+    # Solve system for peak
+    print("Solving Peak")
     combination_df[[
-        "Max PWM rotational speed (rpm)",
-        "Max PWM torque (Nm)",
-        "Max PWM current (A)",
-        "Max PWM thrust (kgf)"
-    ]] = combination_df.apply(
+        "Peak rotational speed (rpm)",
+        "Peak torque (Nm)",
+        "Peak current (A)",
+        "Peak thrust (kgf)"
+    ]] = combination_df.progress_apply(
         solve_equations,
-        args=[equations_at_max_pwm],
+        bounds=([0, 0, 0, 0], [math.inf, math.inf, math.inf, math.inf]),
+        args=[equations_at_peak],
         axis=1,
         result_type="expand")
 
+    # Filtering thrust
+    mask = 4 * combination_df["Peak thrust (kgf)"] > MIN_PEAK_THRUST
+    combination_df = combination_df[mask]
+
+    print(f"Thrust filtered combination: {len(combination_df)}")
+
     # Solve system for hovering
+    print("Solving Hovering")
     combination_df[[
         "Hovering rotational speed (rpm)",
         "Hovering torque (Nm)",
         "Hovering current (A)",
         "Hovering PWM"
-    ]] = combination_df.apply(
+    ]] = combination_df.progress_apply(
         solve_equations,
+        x0=[0, 0, 0, 1.0],
+        bounds=([0, 0, 0, 0.1], [math.inf, math.inf, math.inf, 1.0]),
         args=[equations_at_hovering],
         axis=1,
         result_type="expand")
 
+    # TODO: Filtering hovering time
+    #mask = 4 * combination_df["Peak thrust (kgf)"] > MIN_PEAK_THRUST
+    #combination_df = combination_df[mask]
+
+    print(f"Hovering time combination: {len(combination_df)}")
+
+    # Save combinations
     combination_df.to_csv("Aldo/Propulsion/Datasets/Combinations.csv")
 
 

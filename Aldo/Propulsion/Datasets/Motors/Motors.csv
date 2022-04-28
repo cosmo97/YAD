@@ -1,4 +1,4 @@
-Motor name,Shaft diameter (mm),Motor diameter (mm),Motor height (mm),Magnetic poles,KV [rpm/V],Motor weight (g),No load current (A),Resistance (Ohm)
+Motor name,Shaft diameter (mm),Motor diameter (mm),Motor height (mm),Magnetic poles,KV (rpm/V),Motor weight (g),No load current (A),Resistance (Ohm)
 DYS D1410,,14,10.5,,4000,5,,
 DYS D1410,,14,10.5,,3500,5,,
 DYS D2225-12,3.175,22,25,,2000,32,,0.143

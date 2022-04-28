@@ -1,4 +1,4 @@
-"Capacity [mah]","Nominal voltage [V]","Cells configuration","Discharge [C]","Battery height [mm]","Bettry length [mm]","Battery width [mm]","Battery weight [g]"
+"Capacity (mah)","Nominal voltage (V)","Cells configuration","Discharge (C)","Battery height (mm)","Bettry length (mm)","Battery width (mm)","Battery weight (g)"
 300,7.4,2S1P,25,13.5,51.5,19,20
 450,7.4,2S1P,25,11,56,31,28
 450,11.1,3S1P,25,15,56,31,45
@@ -80,7 +80,7 @@
 4200,7.4,2S2P,60,25,95,46,228
 4400,14.8,4S1P,25,32,147,50,497
 4500,22.2,6S1P,25,50,137,42,670
-4600,7.4,2S2P,60,25mm,95mm,46.5mm,224
+4600,7.4,2S2P,60,25,95,46.5,224
 4800,7.4,2S3P,25,25,69,47,280
 5000,7.4,2S1P,25,23,132,42,282
 5000,7.4,2S1P,50,25,139,47,304
