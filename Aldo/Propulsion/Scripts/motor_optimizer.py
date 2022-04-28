@@ -124,7 +124,7 @@ def solve_at_max_pwm(x):
         df (_type_): _description_
     """
 
-    result = optimize.fsolve(
+    return optimize.fsolve(
         equations_at_max_pwm,
         x0=[0, 0, 0, 0],
         args=x[[
@@ -136,8 +136,6 @@ def solve_at_max_pwm(x):
             "Resistance (Ohm)"
         ]]
     )
-
-    return np.transpose(result)
 
 
 def combination_filter(conf):
@@ -172,18 +170,18 @@ def main():
     combination_df = pd.merge(combination_df, propellers_df, how="cross")
 
     # Solve system for 100% pwm
-    combination_df[["1", "3", "w", "2"]
-                   ] = combination_df.apply(solve_at_max_pwm, axis=1)
+    combination_df[["Res1", "Res2", "Res3", "Res4"]] = combination_df.apply(
+        solve_at_max_pwm, axis=1, result_type="expand")
 
     combination_df.to_csv("Aldo/Propulsion/Datasets/Temp.csv")
-    result_at_max_pwm_df.to_csv("Aldo/Propulsion/Datasets/resssss.csv")
 
 
+'''
 if False:
     # Compute static performance for each combination
     for current_combination in combinations:
 
-        # Work point at controlled thrust
+        # Work point at controlled thrustresult
         def func_fixed_thrust(x, args):
             rot_speed, torque, current, pwm = x
 
@@ -245,7 +243,7 @@ if False:
     battery_weight = np.array(flt[:, 7], dtype=float)
     motor_weight = np.array(flt[:, 14], dtype=float)
     total_weight = battery_weight + 4*motor_weight
-
+'''
 
 if __name__ == "__main__":
     main()

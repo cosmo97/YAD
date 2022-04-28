@@ -1,4 +1,4 @@
-Capacity [mah],Nominal voltage[V],Configuration,Discharge [C],Height [mm],Length [mm],Width [mm],Weight [g]
+"Capacity [mah]","Nominal voltage [V]","Cells configuration","Discharge [C]","Battery height [mm]","Bettry length [mm]","Battery width [mm]","Battery weight [g]"
 300,7.4,2S1P,25,13.5,51.5,19,20
 450,7.4,2S1P,25,11,56,31,28
 450,11.1,3S1P,25,15,56,31,45
