@@ -59,7 +59,7 @@ def motor_torque(torque, current, Kv, noload_current):
     if math.isnan(noload_current):
         noload_current = DEFAULT_NOLOAD_CURRENT
 
-    return torque - (current + noload_current)/(Kv*np.pi/30)
+    return torque - (current - noload_current)/(Kv*np.pi/30)
 
 
 def prop_torque(rot_speed, torque, diameter, pitch):
@@ -193,7 +193,7 @@ def main():
         "Hovering rotational speed (rpm)",
         "Hovering torque (Nm)",
         "Hovering current (A)",
-        "Hovering thrust (kgf)"
+        "Hovering PWM"
     ]] = combination_df.apply(
         solve_equations,
         args=[equations_at_hovering],
