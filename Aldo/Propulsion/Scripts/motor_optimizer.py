@@ -10,10 +10,10 @@ MOTORS_DATASET = "Aldo/Propulsion/Datasets/Motors/Motors.csv"
 PROPELLERS_DATASET = "Aldo/Propulsion/Datasets/Propellers/Propellers.csv"
 
 # System constraints
-MIN_PEAK_THRUST = 0.500  # kgf, 2 times of the weight for control authority
-HOVERING_THRUST = 0.250  # kgf
-MAX_WEIGHT = 250         # grams, maybe less for frame/board
-MIN_HOVERING_TIME = 8    # minutes
+HOVERING_THRUST = 0.250              # kgf
+MIN_PEAK_THRUST = 2*HOVERING_THRUST  # kgf
+MAX_WEIGHT = 250                     # grams, maybe less for frame/board
+MIN_HOVERING_TIME = 5                # minutes
 
 # Default values if NaN, TODO
 DEFAULT_RESISTANCE = 0.0      # Ohm
@@ -138,7 +138,8 @@ def equations_at_hovering(x, *args):
     ]
 
 
-def solve_equations(x, equations, x0=[0, 0, 0, 0], bounds=(-math.inf, math.inf)):
+def solve_equations(
+        x, equations, x0=np.zeros(4), bounds=([-math.inf]*4, [math.inf]*4)):
     """TODO
 
     Args:
@@ -158,7 +159,7 @@ def solve_equations(x, equations, x0=[0, 0, 0, 0], bounds=(-math.inf, math.inf))
         method="dogbox"
     )
 
-    return sol.x
+    return sol.x if sol.cost < 1e-4 else [math.nan]*4
 
 
 def main():
@@ -218,15 +219,16 @@ def main():
         "Hovering PWM"
     ]] = combination_df.progress_apply(
         solve_equations,
-        x0=[0, 0, 0, 1.0],
+        x0=[0, 0, 0, 0.1],
         bounds=([0, 0, 0, 0.1], [math.inf, math.inf, math.inf, 1.0]),
         args=[equations_at_hovering],
         axis=1,
         result_type="expand")
 
-    # TODO: Filtering hovering time
-    #mask = 4 * combination_df["Peak thrust (kgf)"] > MIN_PEAK_THRUST
-    #combination_df = combination_df[mask]
+    # Filtering hovering time
+    mask = 60*(0.001*combination_df["Capacity (mah)"]) / \
+        (4*combination_df["Hovering current (A)"]) > MIN_HOVERING_TIME
+    combination_df = combination_df[mask]
 
     print(f"Hovering time combination: {len(combination_df)}")
 
