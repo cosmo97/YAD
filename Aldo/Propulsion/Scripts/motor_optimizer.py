@@ -9,13 +9,21 @@ BATTERIES_DATASET = "Aldo/Propulsion/Datasets/Batteries/Batteries.csv"
 MOTORS_DATASET = "Aldo/Propulsion/Datasets/Motors/Motors.csv"
 PROPELLERS_DATASET = "Aldo/Propulsion/Datasets/Propellers/Propellers.csv"
 
-# System constraints
-HOVERING_THRUST = 0.250              # kgf
-MIN_PEAK_THRUST = 2*HOVERING_THRUST  # kgf
-MAX_WEIGHT = 250                     # grams, maybe less for frame/board
-MIN_HOVERING_TIME = 5                # minutes
+# Safety factors
+SF_HOVERING_THRUST = 1.2
+SF_MAX_WEIGHT = 1.2
+SF_MAX_HOVERING_CURRENT = 1.2
 
-# Default values if NaN, TODO
+# System constraints
+HOVERING_THRUST = SF_HOVERING_THRUST*0.250   # kgf
+MIN_PEAK_THRUST = 2*HOVERING_THRUST          # kgf
+MAX_HOVERING_PWM = 0.6
+MAX_WEIGHT = 250/SF_MAX_WEIGHT               # grams
+MIN_HOVERING_TIME = 5                        # minutes
+MAX_COST = 100                               # euros
+# TODO insert cost for each component (at least battery and motor)
+
+# Default values if NaN, TODO estimate resistance
 DEFAULT_RESISTANCE = 0.0      # Ohm
 DEFAULT_NOLOAD_CURRENT = 0.0  # Ampere
 
@@ -229,8 +237,19 @@ def main():
     mask = 60*(0.001*combination_df["Capacity (mah)"]) / \
         (4*combination_df["Hovering current (A)"]) > MIN_HOVERING_TIME
     combination_df = combination_df[mask]
-
     print(f"Hovering time combination: {len(combination_df)}")
+
+    # Filtering current at hovering
+    mask = combination_df["Hovering current (A)"] \
+        < (0.001*combination_df["Capacity (mah)"] * combination_df["Discharge (C)"]) \
+        / SF_MAX_HOVERING_CURRENT
+    combination_df = combination_df[mask]
+    print(f"Hovering current combination: {len(combination_df)}")
+
+    # Filtering pwm at hovering
+    mask = combination_df["Hovering PWM"] < MAX_HOVERING_PWM
+    combination_df = combination_df[mask]
+    print(f"Hovering pwm combination: {len(combination_df)}")
 
     # Save combinations
     combination_df.to_csv("Aldo/Propulsion/Datasets/Combinations.csv")
