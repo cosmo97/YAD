@@ -8,23 +8,23 @@ from tqdm import tqdm
 BATTERIES_DATASET = "Aldo/Propulsion/Datasets/Batteries/Batteries.csv"
 MOTORS_DATASET = "Aldo/Propulsion/Datasets/Motors/Motors.csv"
 PROPELLERS_DATASET = "Aldo/Propulsion/Datasets/Propellers/Propellers.csv"
+RESULTS_DATASET_FOLDER = "Aldo/Propulsion/Datasets/Results/"
 
 # Safety factors
-SF_HOVERING_THRUST = 1.2
-SF_MAX_WEIGHT = 1.2
-SF_MAX_HOVERING_CURRENT = 1.2
+SAFETY_FACTOR = 1.2
 
 # System constraints
-HOVERING_THRUST = SF_HOVERING_THRUST*0.250   # kgf
-MIN_PEAK_THRUST = 2*HOVERING_THRUST          # kgf
-MAX_HOVERING_PWM = 0.6
-MAX_WEIGHT = 250/SF_MAX_WEIGHT               # grams
-MIN_HOVERING_TIME = 5                        # minutes
-MAX_COST = 100                               # euros
+HOVERING_THRUST = 0.250  # kgf
+MIN_PEAK_THRUST = 2 * HOVERING_THRUST  # kgf
+MIN_HOVERING_PWM = 0.1
+MAX_HOVERING_PWM = 0.9
+MAX_WEIGHT = 250  # grams
+MIN_HOVERING_TIME = 5  # minutes
+MAX_COST = 100  # euros
 # TODO insert cost for each component (at least battery and motor)
 
 # Default values if NaN, TODO estimate resistance
-DEFAULT_RESISTANCE = 0.0      # Ohm
+DEFAULT_RESISTANCE = 0.0  # Ohm
 DEFAULT_NOLOAD_CURRENT = 0.0  # Ampere
 
 
@@ -46,7 +46,7 @@ def motor_speed(rot_speed, kv, pwm, voltage, resistance, current):
     if math.isnan(resistance):
         resistance = DEFAULT_RESISTANCE
 
-    return rot_speed - kv*(pwm*voltage - resistance*current)
+    return rot_speed - kv * (pwm * voltage - resistance * current)
 
 
 def motor_torque(torque, current, noload_current, kv):
@@ -65,7 +65,7 @@ def motor_torque(torque, current, noload_current, kv):
     if math.isnan(noload_current):
         noload_current = DEFAULT_NOLOAD_CURRENT
 
-    return torque - (current - noload_current)/(kv*np.pi/30)
+    return torque - (current - noload_current) / (kv * np.pi / 30)
 
 
 def prop_torque(torque, rot_speed, diameter, pitch):
@@ -140,34 +140,34 @@ def equations_at_hovering(x, *args):
 
     return [
         prop_torque(torque, rot_speed, diameter, pitch),
-        prop_thrust(HOVERING_THRUST, rot_speed, diameter, pitch),
+        prop_thrust(HOVERING_THRUST / 4, rot_speed, diameter, pitch),
         motor_speed(rot_speed, kv, pwm, voltage, resistance, current),
         motor_torque(torque, current, noload_current, kv)
     ]
 
 
-def solve_equations(
-        x, equations, x0=np.zeros(4), bounds=([-math.inf]*4, [math.inf]*4)):
+def solve_equations(x,
+                    equations,
+                    x0=np.zeros(4),
+                    bounds=([-math.inf] * 4, [math.inf] * 4)):
     """TODO
 
     Args:
         df (_type_): _description_
     """
 
-    sol = optimize.least_squares(
-        equations, x0, "2-point", bounds,
-        args=(x[[
-                "Propeller diameter (in)",
-                "Propeller pitch (in)",
-                "KV (rpm/V)",
-                "Nominal voltage (V)",
-                "No load current (A)",
-                "Resistance (Ohm)"
-                ]]),
-        method="dogbox"
-    )
+    sol = optimize.least_squares(equations,
+                                 x0,
+                                 "2-point",
+                                 bounds,
+                                 args=(x[[
+                                     "Propeller diameter (in)",
+                                     "Propeller pitch (in)", "KV (rpm/V)",
+                                     "Nominal voltage (V)",
+                                     "No load current (A)", "Resistance (Ohm)"
+                                 ]]))
 
-    return sol.x if sol.cost < 1e-4 else [math.nan]*4
+    return sol.x if sol.cost < 1e-8 else [math.nan] * 4
 
 
 def main():
@@ -188,22 +188,26 @@ def main():
     combination_df = pd.merge(batteries_df, motors_df, how="cross")
     combination_df = pd.merge(combination_df, propellers_df, how="cross")
 
-    print(f"Possible combinations: {len(combination_df)}")
+    # Solving total weight
+    print("Solving total weight")
+    combination_df["Total weight (g)"] = combination_df.progress_apply(
+        lambda x: x["Battery weight (g)"] + 4 *
+        (x["Motor weight (g)"] + x["Propeller weight (g)"]),
+        axis=1,
+        result_type="expand")
+
+    # Save combinations before filter
+    print(f"Total possible combinations: {len(combination_df)}")
+    combination_df.to_csv(RESULTS_DATASET_FOLDER + "AllCombinations.csv")
 
     # Filtering weight
-    mask = (combination_df["Battery weight (g)"] +
-            4 * (combination_df["Motor weight (g)"] +
-                 combination_df["Propeller weight (g)"])) < MAX_WEIGHT
-    combination_df = combination_df[mask]
+    combination_df = combination_df[combination_df["Total weight (g)"] *
+                                    SAFETY_FACTOR < MAX_WEIGHT]
 
-    print(f"Weight filtered combination: {len(combination_df)}")
-
-    # Solve system for peak
-    print("Solving Peak")
+    # Solve system for peak thrust
+    print("Solving peak")
     combination_df[[
-        "Peak rotational speed (rpm)",
-        "Peak torque (Nm)",
-        "Peak current (A)",
+        "Peak rotational speed (rpm)", "Peak torque (Nm)", "Peak current (A)",
         "Peak thrust (kgf)"
     ]] = combination_df.progress_apply(
         solve_equations,
@@ -212,47 +216,63 @@ def main():
         axis=1,
         result_type="expand")
 
-    # Filtering thrust
-    mask = 4 * combination_df["Peak thrust (kgf)"] > MIN_PEAK_THRUST
-    combination_df = combination_df[mask]
+    # Solving total thrust
+    print("Solving total thrust")
+    combination_df["Total thrust (kgf)"] = combination_df.progress_apply(
+        lambda x: 4 * x["Peak thrust (kgf)"], axis=1, result_type="expand")
 
-    print(f"Thrust filtered combination: {len(combination_df)}")
+    # Save combinations before filter
+    print(f"Weight filtered combinations: {len(combination_df)}")
+    combination_df.to_csv(RESULTS_DATASET_FOLDER +
+                          "WeightFilteredCombinations.csv")
+
+    # Filtering thrust
+    combination_df = combination_df[
+        combination_df["Total thrust (kgf)"] > SAFETY_FACTOR * MIN_PEAK_THRUST]
 
     # Solve system for hovering
-    print("Solving Hovering")
+    print("Solving hovering")
     combination_df[[
-        "Hovering rotational speed (rpm)",
-        "Hovering torque (Nm)",
-        "Hovering current (A)",
-        "Hovering PWM"
-    ]] = combination_df.progress_apply(
-        solve_equations,
-        x0=[0, 0, 0, 0.1],
-        bounds=([0, 0, 0, 0.1], [math.inf, math.inf, math.inf, 1.0]),
-        args=[equations_at_hovering],
+        "Hovering rotational speed (rpm)", "Hovering torque (Nm)",
+        "Hovering current (A)", "Hovering PWM"
+    ]] = combination_df.progress_apply(solve_equations,
+                                       x0=[0, 0, 0, MAX_HOVERING_PWM],
+                                       bounds=([0, 0, 0, MIN_HOVERING_PWM], [
+                                           math.inf, math.inf, math.inf,
+                                           MAX_HOVERING_PWM
+                                       ]),
+                                       args=[equations_at_hovering],
+                                       axis=1,
+                                       result_type="expand")
+
+    # Solving hovering time
+    print("Solving hovering time")
+    combination_df["Hovering time (m)"] = combination_df.progress_apply(
+        lambda x: 60 * (0.001 * x["Capacity (mah)"]) /
+        (4 * x["Hovering current (A)"]),
         axis=1,
         result_type="expand")
 
+    # Save combinations before filter
+    print(f"Thrust filtered combinations: {len(combination_df)}")
+    combination_df.to_csv(RESULTS_DATASET_FOLDER +
+                          "ThrustFilteredCombinations.csv")
+
     # Filtering hovering time
-    mask = 60*(0.001*combination_df["Capacity (mah)"]) / \
-        (4*combination_df["Hovering current (A)"]) > MIN_HOVERING_TIME
-    combination_df = combination_df[mask]
-    print(f"Hovering time combination: {len(combination_df)}")
+    combination_df = combination_df[combination_df["Hovering time (m)"] >
+                                    MIN_HOVERING_TIME * SAFETY_FACTOR]
 
     # Filtering current at hovering
-    mask = combination_df["Hovering current (A)"] \
-        < (0.001*combination_df["Capacity (mah)"] * combination_df["Discharge (C)"]) \
-        / SF_MAX_HOVERING_CURRENT
-    combination_df = combination_df[mask]
-    print(f"Hovering current combination: {len(combination_df)}")
+    if False:
+        mask = combination_df["Hovering current (A)"] \
+            < (0.001*combination_df["Capacity (mah)"] * combination_df["Discharge (C)"])
+        combination_df = combination_df[mask]
+        print(f"Hovering current combination: {len(combination_df)}")
 
-    # Filtering pwm at hovering
-    mask = combination_df["Hovering PWM"] < MAX_HOVERING_PWM
-    combination_df = combination_df[mask]
-    print(f"Hovering pwm combination: {len(combination_df)}")
-
-    # Save combinations
-    combination_df.to_csv("Aldo/Propulsion/Datasets/Combinations.csv")
+    # Save hovering time filtered combinations
+    print(f"Hovering time filtered combinations: {len(combination_df)}")
+    combination_df.to_csv(RESULTS_DATASET_FOLDER +
+                          "HoveringTimeFilteredCombinations.csv")
 
 
 if __name__ == "__main__":
