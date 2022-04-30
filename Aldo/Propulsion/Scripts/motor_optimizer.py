@@ -164,7 +164,7 @@ def solve_equations(x,
                                      "Propeller diameter (in)",
                                      "Propeller pitch (in)", "KV (rpm/V)",
                                      "Nominal voltage (V)",
-                                     "No load current (A)", "Resistance (Ohm)"
+                                     "No load current @10V (A)", "Resistance (Ohm)"
                                  ]]))
 
     return sol.x if sol.cost < 1e-8 else [math.nan] * 4
