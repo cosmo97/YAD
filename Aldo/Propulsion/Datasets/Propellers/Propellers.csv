@@ -1,13 +1,13 @@
-"Propeller Name","Propeller diameter (in)","Propeller pitch (in)","Propeller weight (g)","Propeller material",Tests
-"6030 Carbon Nylon",6,3,2.22,"Carbon Nylon",16
-"Gemfan 5040 R",5,4,3,ABS,8
-"6045 plastic",6,4.5,6,Plastic,9
-"Gemfan Hurricane 51499",5.1,4.99,5.2,"Poly Carbonate",8
-"Carbon Fiber 5030",5,3,2.18,"Carbon Fiber",7
-"DALPROP 6040",6,4,4.32,Nylon,7
-"Gemfan 6030 Thick hub",6,3,5.23,Plastic,7
-"Gemfan 5050 3-Blades BN",5,5,5,"Poly Carbonate",6
-"KingKong 6040",6,4,3.38,Plastic,5
-"Quanum Carbon Fiber Propeller 6045 Self-Locking",6,4.5,6.78,"Carbon Fiber",4
-"T-Motor 5143 Ultra-Light",5.1,4.3,3.7,"Poly Carbonate",3
-"Gemfan 3052 - Flash",3,5.2,1.6,"Poly Carbonate",4
+"Propeller Name","Propeller diameter (in)","Propeller pitch (in)","Propeller weight (g)","Propeller material"
+"6030 Carbon Nylon",6,3,2.22,"Carbon Nylon"
+"Gemfan 5040 R",5,4,3,ABS
+"6045 plastic",6,4.5,6,Plastic
+"Gemfan Hurricane 51499",5.1,4.99,5.2,"Poly Carbonate"
+"Carbon Fiber 5030",5,3,2.18,"Carbon Fiber"
+"DALPROP 6040",6,4,4.32,Nylon
+"Gemfan 6030 Thick hub",6,3,5.23,Plastic
+"Gemfan 5050 3-Blades BN",5,5,5,"Poly Carbonate"
+"KingKong 6040",6,4,3.38,Plastic
+"Quanum Carbon Fiber Propeller 6045 Self-Locking",6,4.5,6.78,"Carbon Fiber"
+"T-Motor 5143 Ultra-Light",5.1,4.3,3.7,"Poly Carbonate"
+"Gemfan 3052 - Flash",3,5.2,1.6,"Poly Carbonate"
