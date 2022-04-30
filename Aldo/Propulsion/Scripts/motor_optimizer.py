@@ -16,8 +16,8 @@ SAFETY_FACTOR = 1.2
 # System constraints
 HOVERING_THRUST = 0.250  # kgf
 MIN_PEAK_THRUST = 2 * HOVERING_THRUST  # kgf
-MIN_HOVERING_PWM = 0.1
-MAX_HOVERING_PWM = 0.9
+MIN_HOVERING_PWM = 0.1  # 10 %
+MAX_HOVERING_PWM = 0.9  # 90 %
 MAX_WEIGHT = 250  # grams
 MIN_HOVERING_TIME = 5  # minutes
 MAX_COST = 100  # euros
@@ -271,6 +271,9 @@ def main():
 
     # Save hovering time filtered combinations
     print(f"Hovering time filtered combinations: {len(combination_df)}")
+    combination_df.sort_values("Hovering time (m)",
+                               inplace=True,
+                               ascending=False)
     combination_df.to_csv(RESULTS_DATASET_FOLDER +
                           "HoveringTimeFilteredCombinations.csv")
 
