@@ -23,12 +23,16 @@ MIN_HOVERING_TIME = 5  # minutes
 MAX_COST = 100  # euros
 # TODO insert cost for each component (at least battery and motor)
 
-# Default values if NaN, TODO estimate resistance
-DEFAULT_RESISTANCE = 0.0  # Ohm
+# Noload current is set to zero for all motors
 DEFAULT_NOLOAD_CURRENT = 0.0  # Ampere
 
 
-def motor_speed(rot_speed, kv, pwm, voltage, resistance, current):
+def solve_default_resistance(motor_diameter, motor_height):
+    estimated_resistance = -0.00023654 * motor_diameter * motor_height
+    return estimated_resistance
+
+
+def motor_speed(rot_speed, kv, pwm, voltage, resistance, current, motor_diameter, motor_height):
     """TODO
 
     Args:
@@ -44,7 +48,7 @@ def motor_speed(rot_speed, kv, pwm, voltage, resistance, current):
     """
 
     if math.isnan(resistance):
-        resistance = DEFAULT_RESISTANCE
+        resistance = solve_default_resistance(motor_diameter, motor_height)
 
     return rot_speed - kv * (pwm * voltage - resistance * current)
 
@@ -62,7 +66,7 @@ def motor_torque(torque, current, noload_current, kv):
         _type_: _description_
     """
 
-    if math.isnan(noload_current):
+    if True:
         noload_current = DEFAULT_NOLOAD_CURRENT
 
     return torque - (current - noload_current) / (kv * np.pi / 30)
@@ -114,12 +118,13 @@ def equations_at_peak(x, *args):
     """
 
     rot_speed, torque, current, thrust = x
-    diameter, pitch, kv, voltage, noload_current, resistance = args
+    diameter, pitch, kv, voltage, noload_current, resistance, motor_diameter, motor_height = args
 
     return [
         prop_torque(torque, rot_speed, diameter, pitch),
         prop_thrust(thrust, rot_speed, diameter, pitch),
-        motor_speed(rot_speed, kv, 1.0, voltage, resistance, current),
+        motor_speed(rot_speed, kv, 1.0, voltage, resistance,
+                    current, motor_diameter, motor_height),
         motor_torque(torque, current, noload_current, kv)
     ]
 
@@ -136,12 +141,13 @@ def equations_at_hovering(x, *args):
     """
 
     rot_speed, torque, current, pwm = x
-    diameter, pitch, kv, voltage, noload_current, resistance = args
+    diameter, pitch, kv, voltage, noload_current, resistance, motor_diameter, motor_height = args
 
     return [
         prop_torque(torque, rot_speed, diameter, pitch),
         prop_thrust(HOVERING_THRUST / 4, rot_speed, diameter, pitch),
-        motor_speed(rot_speed, kv, pwm, voltage, resistance, current),
+        motor_speed(rot_speed, kv, pwm, voltage, resistance,
+                    current, motor_diameter, motor_height),
         motor_torque(torque, current, noload_current, kv)
     ]
 
@@ -164,7 +170,8 @@ def solve_equations(x,
                                      "Propeller diameter (in)",
                                      "Propeller pitch (in)", "KV (rpm/V)",
                                      "Nominal voltage (V)",
-                                     "No load current @10V (A)", "Resistance (Ohm)"
+                                     "No load current @10V (A)", "Resistance (Ohm)",
+                                     "Motor diameter (mm)", "Motor height (mm)"
                                  ]]))
 
     return sol.x if sol.cost < 1e-8 else [math.nan] * 4
