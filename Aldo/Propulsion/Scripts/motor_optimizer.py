@@ -164,7 +164,7 @@ def solve_equations(x,
                                      "Propeller diameter (in)",
                                      "Propeller pitch (in)", "KV (rpm/V)",
                                      "Nominal voltage (V)",
-                                     "No load current (A)", "Resistance (Ohm)"
+                                     "No load current @10V (A)", "Resistance (Ohm)"
                                  ]]))
 
     return sol.x if sol.cost < 1e-8 else [math.nan] * 4
@@ -262,13 +262,6 @@ def main():
     combination_df = combination_df[combination_df["Hovering time (m)"] >
                                     MIN_HOVERING_TIME * SAFETY_FACTOR]
 
-    # Filtering current at hovering
-    if False:
-        mask = combination_df["Hovering current (A)"] \
-            < (0.001*combination_df["Capacity (mah)"] * combination_df["Discharge (C)"])
-        combination_df = combination_df[mask]
-        print(f"Hovering current combination: {len(combination_df)}")
-
     # Save hovering time filtered combinations
     print(f"Hovering time filtered combinations: {len(combination_df)}")
     combination_df.sort_values("Hovering time (m)",
@@ -276,6 +269,15 @@ def main():
                                ascending=False)
     combination_df.to_csv(RESULTS_DATASET_FOLDER +
                           "HoveringTimeFilteredCombinations.csv")
+
+    # Filtering current at hovering
+    combination_df = combination_df[4 * combination_df["Hovering current (A)"] * SAFETY_FACTOR
+                                    < (0.001*combination_df["Capacity (mah)"] * combination_df["Discharge (C)"])]
+
+    # Save hovering current filtered combinations
+    print(f"Hovering current filtered combinations: {len(combination_df)}")
+    combination_df.to_csv(RESULTS_DATASET_FOLDER +
+                          "HoveringCurrentFilteredCombinations.csv")
 
 
 if __name__ == "__main__":
