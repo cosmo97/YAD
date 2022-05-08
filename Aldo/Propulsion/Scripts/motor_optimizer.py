@@ -28,7 +28,8 @@ DEFAULT_NOLOAD_CURRENT = 0.0  # Ampere
 
 
 def solve_default_resistance(motor_diameter, motor_height):
-    estimated_resistance = -0.00023654 * motor_diameter * motor_height
+    estimated_resistance = -9.167414568654554e-06 * \
+        np.pi * motor_diameter**2 * motor_height / 4
     return estimated_resistance
 
 
@@ -175,6 +176,14 @@ def solve_equations(x,
                                  ]]))
 
     return sol.x if sol.cost < 1e-8 else [math.nan] * 4
+
+
+def compute_best_combinations(combination_df):
+    # TODO compute best 10, plot best 100 by weight, hovering time, price to look for a "knee"
+    # compute and plot custom loss function: price + hovering time + ...
+    # In order to do this, it is needed to normalize price etc so all features have same weight
+
+    pass
 
 
 def main():

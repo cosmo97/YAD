@@ -19,8 +19,8 @@ def import_data():
 
 
 def compute_volume(resistance_df):
-    resistance_df["Motor volume (mm^3)"] = resistance_df["Motor height (mm)"] * \
-        resistance_df["Motor diameter (mm)"]
+    resistance_df["Motor volume (mm^3)"] = np.pi * resistance_df["Motor height (mm)"] * \
+        (resistance_df["Motor diameter (mm)"])**2 / 4
     return resistance_df
 
 
