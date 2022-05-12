@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from scipy import optimize
 from tqdm import tqdm
+import re
+import matplotlib.pyplot as plt
 
 # Datasets
 BATTERIES_DATASET = "Aldo/Propulsion/Datasets/Batteries/Batteries.csv"
@@ -179,11 +181,26 @@ def solve_equations(x,
 
 
 def compute_best_combinations(combination_df):
-    # TODO compute best 10, plot best 100 by weight, hovering time, price to look for a "knee"
-    # compute and plot custom loss function: price + hovering time + ...
-    # In order to do this, it is needed to normalize price etc so all features have same weight
-
-    pass
+    cost_features_to_minimize = [
+        "Total weight (g)", "Total price (€)"]
+    cost_features_to_maximize = ["Hovering time (m)"]
+    normalized_cost_features = combination_df[cost_features_to_maximize + cost_features_to_minimize].apply(
+        lambda x: (x-x.min()) / (x.max()-x.min()))
+    combination_df["Custom cost function"] = normalized_cost_features[cost_features_to_maximize].sum(
+        axis=1) - normalized_cost_features[cost_features_to_minimize].sum(axis=1)
+    best_combination_features = cost_features_to_minimize + \
+        cost_features_to_maximize + ["Custom cost function"]
+    for feature in best_combination_features:
+        ascending_ord = False
+        if feature in cost_features_to_minimize:
+            ascending_ord = True
+        combination_df = combination_df.sort_values(
+            by=[feature], ascending=ascending_ord)
+        name_csv = RESULTS_DATASET_FOLDER + "Best10" + \
+            re.sub("[\(\[].*?[\)\]]", "", feature).replace(" ", "") + \
+            "Combinations.csv"
+        combination_df.dropna(
+            subset=best_combination_features).iloc[:10].to_csv(name_csv)
 
 
 def main():
@@ -209,6 +226,14 @@ def main():
     combination_df["Total weight (g)"] = combination_df.progress_apply(
         lambda x: x["Battery weight (g)"] + 4 *
         (x["Motor weight (g)"] + x["Propeller weight (g)"]),
+        axis=1,
+        result_type="expand")
+
+    # Solving total price
+    print("Solving total price")
+    combination_df["Total price (€)"] = combination_df.progress_apply(
+        lambda x: x["Battery price (€)"] + 4 *
+        (x["Motor price (€)"] + x["Propeller price (€)"]),
         axis=1,
         result_type="expand")
 
@@ -294,6 +319,8 @@ def main():
     print(f"Hovering current filtered combinations: {len(combination_df)}")
     combination_df.to_csv(RESULTS_DATASET_FOLDER +
                           "HoveringCurrentFilteredCombinations.csv")
+
+    compute_best_combinations(combination_df)
 
 
 if __name__ == "__main__":
