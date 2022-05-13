@@ -181,8 +181,7 @@ def solve_equations(x,
 
 
 def compute_best_combinations(combination_df):
-    cost_features_to_minimize = [
-        "Total weight (g)", "Total price (€)"]
+    cost_features_to_minimize = ["Total price (€)"]
     cost_features_to_maximize = ["Hovering time (m)"]
     normalized_cost_features = combination_df[cost_features_to_maximize + cost_features_to_minimize].apply(
         lambda x: (x-x.min()) / (x.max()-x.min()))
@@ -200,7 +199,7 @@ def compute_best_combinations(combination_df):
             re.sub("[\(\[].*?[\)\]]", "", feature).replace(" ", "") + \
             "Combinations.csv"
         combination_df.dropna(
-            subset=best_combination_features).iloc[:10].to_csv(name_csv)
+            subset=[feature]).iloc[:10].to_csv(name_csv)
 
 
 def main():
