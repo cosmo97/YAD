@@ -21,7 +21,7 @@ MIN_PEAK_THRUST = 2 * HOVERING_THRUST  # kgf
 MIN_HOVERING_PWM = 0.1  # 10 %
 MAX_HOVERING_PWM = 0.9  # 90 %
 MAX_WEIGHT = 250  # grams
-MIN_HOVERING_TIME = 5  # minutes
+MIN_HOVERING_TIME = 15  # minutes
 MAX_COST = 100  # euros
 # TODO insert cost for each component (at least battery and motor)
 
@@ -35,7 +35,8 @@ def solve_default_resistance(motor_diameter, motor_height):
     return estimated_resistance
 
 
-def motor_speed(rot_speed, kv, pwm, voltage, resistance, current, motor_diameter, motor_height):
+def motor_speed(rot_speed, kv, pwm, voltage, resistance, current,
+                motor_diameter, motor_height):
     """TODO
 
     Args:
@@ -126,8 +127,8 @@ def equations_at_peak(x, *args):
     return [
         prop_torque(torque, rot_speed, diameter, pitch),
         prop_thrust(thrust, rot_speed, diameter, pitch),
-        motor_speed(rot_speed, kv, 1.0, voltage, resistance,
-                    current, motor_diameter, motor_height),
+        motor_speed(rot_speed, kv, 1.0, voltage, resistance, current,
+                    motor_diameter, motor_height),
         motor_torque(torque, current, noload_current, kv)
     ]
 
@@ -149,8 +150,8 @@ def equations_at_hovering(x, *args):
     return [
         prop_torque(torque, rot_speed, diameter, pitch),
         prop_thrust(HOVERING_THRUST / 4, rot_speed, diameter, pitch),
-        motor_speed(rot_speed, kv, pwm, voltage, resistance,
-                    current, motor_diameter, motor_height),
+        motor_speed(rot_speed, kv, pwm, voltage, resistance, current,
+                    motor_diameter, motor_height),
         motor_torque(torque, current, noload_current, kv)
     ]
 
@@ -165,37 +166,38 @@ def solve_equations(x,
         df (_type_): _description_
     """
 
-    sol = optimize.least_squares(equations,
-                                 x0,
-                                 "2-point",
-                                 bounds,
-                                 args=(x[[
-                                     "Propeller diameter (in)",
-                                     "Propeller pitch (in)", "KV (rpm/V)",
-                                     "Nominal voltage (V)",
-                                     "No load current @10V (A)", "Resistance (Ohm)",
-                                     "Motor diameter (mm)", "Motor height (mm)"
-                                 ]]))
+    sol = optimize.least_squares(
+        equations,
+        x0,
+        "2-point",
+        bounds,
+        args=(x[[
+            "Propeller diameter (in)", "Propeller pitch (in)", "KV (rpm/V)",
+            "Nominal voltage (V)", "No load current @10V (A)",
+            "Resistance (Ohm)", "Motor diameter (mm)", "Motor height (mm)"
+        ]]))
 
     return sol.x if sol.cost < 1e-8 else [math.nan] * 4
 
 
 def compute_best_combinations(combination_df):
-    cost_features_to_minimize = [
-        "Total weight (g)", "Total price (€)"]
+    cost_features_to_minimize = ["Total weight (g)", "Total price (€)"]
     cost_features_to_maximize = ["Hovering time (m)"]
-    normalized_cost_features = combination_df[cost_features_to_maximize + cost_features_to_minimize].apply(
-        lambda x: (x-x.min()) / (x.max()-x.min()))
-    combination_df["Custom cost function"] = normalized_cost_features[cost_features_to_maximize].sum(
-        axis=1) - normalized_cost_features[cost_features_to_minimize].sum(axis=1)
+    normalized_cost_features = combination_df[
+        cost_features_to_maximize + cost_features_to_minimize].apply(
+            lambda x: (x - x.min()) / (x.max() - x.min()))
+    combination_df["Custom cost function"] = normalized_cost_features[
+        cost_features_to_maximize].sum(
+            axis=1) - normalized_cost_features[cost_features_to_minimize].sum(
+                axis=1)
     best_combination_features = cost_features_to_minimize + \
         cost_features_to_maximize + ["Custom cost function"]
     for feature in best_combination_features:
         ascending_ord = False
         if feature in cost_features_to_minimize:
             ascending_ord = True
-        combination_df = combination_df.sort_values(
-            by=[feature], ascending=ascending_ord)
+        combination_df = combination_df.sort_values(by=[feature],
+                                                    ascending=ascending_ord)
         name_csv = RESULTS_DATASET_FOLDER + "Best10" + \
             re.sub("[\(\[].*?[\)\]]", "", feature).replace(" ", "") + \
             "Combinations.csv"
@@ -312,8 +314,10 @@ def main():
                           "HoveringTimeFilteredCombinations.csv")
 
     # Filtering current at hovering
-    combination_df = combination_df[4 * combination_df["Hovering current (A)"] * SAFETY_FACTOR
-                                    < (0.001*combination_df["Capacity (mah)"] * combination_df["Discharge (C)"])]
+    combination_df = combination_df[
+        4 * combination_df["Hovering current (A)"] *
+        SAFETY_FACTOR < (0.001 * combination_df["Capacity (mah)"] *
+                         combination_df["Discharge (C)"])]
 
     # Save hovering current filtered combinations
     print(f"Hovering current filtered combinations: {len(combination_df)}")
