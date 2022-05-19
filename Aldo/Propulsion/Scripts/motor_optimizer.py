@@ -201,8 +201,7 @@ def compute_best_combinations(combination_df):
         name_csv = RESULTS_DATASET_FOLDER + "Best10" + \
             re.sub("[\(\[].*?[\)\]]", "", feature).replace(" ", "") + \
             "Combinations.csv"
-        combination_df.dropna(
-            subset=best_combination_features).iloc[:10].to_csv(name_csv)
+        combination_df.dropna(subset=[feature]).iloc[:10].to_csv(name_csv)
 
 
 def main():
